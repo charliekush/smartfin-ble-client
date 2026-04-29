@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "ms-vscode.cpptools",
+        "particle.particle-vscode-core",
+        "cschlosser.doxdocgen",
+        "ms-vscode.cmake-tools"
+    ]
+}
