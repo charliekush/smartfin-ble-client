@@ -3,10 +3,11 @@
  * @author Charlie Kushelevsky (charliekushelevsky@gmail.com)
  * @brief ISampleSink interface for consuming decoded sensor samples.
  * @date 2026-04-30
+ * 
  */
 
-#ifndef SF_PIPELINE_SAMPLE_SINK_HPP
-#define SF_PIPELINE_SAMPLE_SINK_HPP
+#ifndef SAMPLE_SINK_HPP
+#define SAMPLE_SINK_HPP
 
 #include "protocol/ensemble_types.hpp"
 
@@ -30,6 +31,9 @@ namespace sf::pipeline {
  */
 class ISampleSink {
 public:
+    /**
+     * @brief Destroy the sink interface.
+     */
     virtual ~ISampleSink() = default;
 
     /**
@@ -45,6 +49,6 @@ public:
     virtual void on_imu(const sf::protocol::DecodedImu& sample) = 0;
 };
 
-} // namespace sf::pipeline
+}
 
-#endif // SF_PIPELINE_SAMPLE_SINK_HPP
+#endif

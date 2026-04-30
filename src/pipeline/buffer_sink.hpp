@@ -3,10 +3,11 @@
  * @author Charlie Kushelevsky (charliekushelevsky@gmail.com)
  * @brief ISampleSink that accumulates samples for post-ride processing.
  * @date 2026-04-30
+ * 
  */
 
-#ifndef SF_PIPELINE_BUFFER_SINK_HPP
-#define SF_PIPELINE_BUFFER_SINK_HPP
+#ifndef BUFFER_SINK_HPP
+#define BUFFER_SINK_HPP
 
 #include "sample_sink.hpp"
 #include "protocol/ensemble_types.hpp"
@@ -72,17 +73,19 @@ public:
         return imu_;
     }
 
-    /// Discard all buffered samples.
+    /**
+     * @brief Discard all buffered samples.
+     */
     void clear() {
         temps_.clear();
         imu_.clear();
     }
 
 private:
-    std::vector<sf::protocol::DecodedTemp> temps_; ///< Accumulated temperature samples
-    std::vector<sf::protocol::DecodedImu>  imu_;   ///< Accumulated IMU samples
+    std::vector<sf::protocol::DecodedTemp> temps_; ///< Accumulated temperature samples.
+    std::vector<sf::protocol::DecodedImu>  imu_;   ///< Accumulated IMU samples.
 };
 
 } // namespace sf::pipeline
 
-#endif // SF_PIPELINE_BUFFER_SINK_HPP
+#endif // BUFFER_SINK_HPP
