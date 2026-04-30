@@ -1,17 +1,6 @@
 CompileFlags:
   CompilationDatabase: build
   Compiler: /usr/bin/clang++
-  Add:
-    - -xc++
-    - -std=c++20
-    - -isysroot
-    - /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-    - -Isrc
-    - -Iexternal/SimpleBLE/simpleble/include
-    - -Ibuild/external/SimpleBLE/simpleble/export
-    - DSMARTFIN_ENABLE_SIMPLEBLE=1
-
-
 
 Diagnostics:
   UnusedIncludes: Strict
