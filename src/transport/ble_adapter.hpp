@@ -3,10 +3,11 @@
  * @author Charlie Kushelevsky (charliekushelevsky@gmail.com)
  * @brief Abstract BLE peripheral adapter interface.
  * @date 2026-04-30
+ * 
  */
 
-#ifndef SF_TRANSPORT_BLE_ADAPTER_HPP
-#define SF_TRANSPORT_BLE_ADAPTER_HPP
+#ifndef BLE_ADAPTER_HPP
+#define BLE_ADAPTER_HPP
 
 #include <cstdint>
 #include <functional>
@@ -37,6 +38,9 @@ using NotifyCallback = std::function<void(std::span<const uint8_t> packet)>;
  */
 class IBleAdapter {
 public:
+    /**
+     * @brief Destroy the adapter interface.
+     */
     virtual ~IBleAdapter() = default;
 
     /**
@@ -78,16 +82,24 @@ public:
                                const std::string& char_uuid,
                                const std::vector<uint8_t>& payload) = 0;
 
-    /// Disconnect from the current peripheral.
+    /**
+     * @brief Disconnect from the current peripheral.
+     */
     virtual void disconnect() = 0;
 
-    /// @return @c true if a peripheral is currently connected.
+    /**
+     * @brief Report whether a peripheral is currently connected.
+     * @return @c true if a peripheral is currently connected.
+     */
     virtual bool is_connected() = 0;
 
-    /// @return Negotiated ATT MTU in bytes, or 0 if not connected.
+    /**
+     * @brief Get the negotiated ATT MTU.
+     * @return Negotiated ATT MTU in bytes, or 0 if not connected.
+     */
     virtual uint16_t mtu() = 0;
 };
 
-} // namespace sf::transport
+}
 
-#endif // SF_TRANSPORT_BLE_ADAPTER_HPP
+#endif
