@@ -3,10 +3,11 @@
  * @author Charlie Kushelevsky (charliekushelevsky@gmail.com)
  * @brief BLE packet decoder: transport header → typed ensemble structs.
  * @date 2026-04-30
+ * 
  */
 
-#ifndef SF_PROTOCOL_ENSEMBLE_DECODER_HPP
-#define SF_PROTOCOL_ENSEMBLE_DECODER_HPP
+#ifndef ENSEMBLE_DECODER_HPP
+#define ENSEMBLE_DECODER_HPP
 
 #include "ensemble_types.hpp"
 
@@ -32,6 +33,6 @@ namespace sf::protocol {
 bool decode_packet(std::span<const uint8_t> packet,
                    std::vector<DecodedEnsemble>& out);
 
-} // namespace sf::protocol
+}
 
-#endif // SF_PROTOCOL_ENSEMBLE_DECODER_HPP
+#endif
