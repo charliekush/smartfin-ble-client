@@ -1,0 +1,88 @@
+/**
+ * @file buffer_sink.hpp
+ * @author Charlie Kushelevsky (charliekushelevsky@gmail.com)
+ * @brief ISampleSink that accumulates samples for post-ride processing.
+ * @date 2026-04-30
+ */
+
+#ifndef SF_PIPELINE_BUFFER_SINK_HPP
+#define SF_PIPELINE_BUFFER_SINK_HPP
+
+#include "sample_sink.hpp"
+#include "protocol/ensemble_types.hpp"
+
+#include <span>
+#include <vector>
+
+namespace sf::pipeline {
+
+/**
+ * @brief ISampleSink that accumulates all samples in memory during a session.
+ *
+ * Designed for the post-ride processing model: collect raw samples while BLE
+ * is connected, then run algorithms (Madgwick, FFT, wave detection) over the
+ * complete buffer after @c Session::run() returns.
+ *
+ * @par Usage
+ * @code
+ *   BufferSink sink;
+ *   Session session(adapter, sink, cfg);
+ *   session.run();                       // blocks until disconnect
+ *
+ *   auto imus  = sink.imu_samples();     // full ride IMU data
+ *   auto temps = sink.temperatures();    // full ride temp data
+ *   // then run Madgwick, FFT, CSV export, wave detection, etc.
+ * @endcode
+ *
+ * @par Memory
+ * At 100 Hz IMU for a 1-hour session: ~360 k samples × 40 bytes ≈ 14 MB.
+ * Acceptable on desktop and iOS; profile before using on watchOS.
+ */
+class BufferSink final : public ISampleSink {
+public:
+    /**
+     * @brief Append a temperature sample to the internal buffer.
+     * @param s  Decoded temperature ensemble.
+     */
+    void on_temperature(const sf::protocol::DecodedTemp& s) override {
+        temps_.push_back(s);
+    }
+
+    /**
+     * @brief Append an IMU sample to the internal buffer.
+     * @param s  Decoded IMU ensemble.
+     */
+    void on_imu(const sf::protocol::DecodedImu& s) override {
+        imu_.push_back(s);
+    }
+
+    /**
+     * @brief Read-only view of all accumulated temperature samples.
+     * @return Span over the internal temperature vector.
+     */
+    std::span<const sf::protocol::DecodedTemp> temperatures() const {
+        return temps_;
+    }
+
+    /**
+     * @brief Read-only view of all accumulated IMU samples.
+     * @return Span over the internal IMU vector.
+     */
+    std::span<const sf::protocol::DecodedImu> imu_samples() const {
+        return imu_;
+    }
+
+    /// Discard all buffered samples.
+    void clear() {
+        temps_.clear();
+        imu_.clear();
+    }
+
+private:
+    std::vector<sf::protocol::DecodedTemp> temps_; ///< Accumulated temperature samples
+    std::vector<sf::protocol::DecodedImu>  imu_;   ///< Accumulated IMU samples
+};
+
+} // namespace sf::pipeline
+
+#endif // SF_PIPELINE_BUFFER_SINK_HPP
