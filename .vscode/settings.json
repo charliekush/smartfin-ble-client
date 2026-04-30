@@ -1,6 +1,6 @@
 {
     "extensions.ignoreRecommendations": false,
-    "C_Cpp.default.configurationProvider": "particle.particle-vscode-core",
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "files.associations": {
         "*.ino": "cpp",
         "cstdarg": "cpp",
@@ -58,17 +58,17 @@
         "semaphore": "cpp",
         "span": "cpp"
     },
-    "particle.firmwareVersion": "5.3.0",
-    "particle.targetPlatform": "tracker",
-    "cmake.configureOnOpen": false,
-    "C_Cpp.default.cppStandard": "c++11",
-    "C_Cpp.default.cStandard": "c11",
+    "cmake.configureOnOpen": true,
+    "C_Cpp.default.cppStandard": "c++20",
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/build"
+    ],
+    "C_Cpp.default.cStandard": "c17",
     "C_Cpp.doxygen.generatedStyle": "/**",
     "C_Cpp.autoAddFileAssociations": false,
     "editor.rulers": [
         80
     ],
-    "particle.enableVerboseLocalCompilerLogging": true,
     "C_Cpp.formatting": "clangFormat",
     "editor.formatOnPaste": false,
     "editor.formatOnSave": true,
@@ -83,6 +83,7 @@
         "cwd": "${workspaceFolder}"
     },
     "cmake.configureArgs": [
-        "-DCMAKE_BUILD_TYPE=Debug"
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DSMARTFIN_ENABLE_SIMPLEBLE=ON"
     ]
 }
