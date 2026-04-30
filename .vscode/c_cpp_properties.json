@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "name": "cmake",
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "mergeConfigurations": true,
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/external/SimpleBLE/simpleble/include"
+            ],
+            "cppStandard": "c++20"
+        }
+    ],
+    "version": 4
+}
