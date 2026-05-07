@@ -41,9 +41,9 @@ static void process_ride(std::span<const sf::protocol::DecodedTemp> temps,
 
     if (!imus.empty()) {
         /// Report the elapsed time covered by the buffered IMU samples.
-        const uint32_t duration_ds = imus.back().elapsed_time_ds
-                                   - imus.front().elapsed_time_ds;
-        std::printf("  IMU duration : %.1f s\n", duration_ds / 10.0f);
+        const uint32_t duration_ms = imus.back().elapsed_time_ms
+                                   - imus.front().elapsed_time_ms;
+        std::printf("  IMU duration : %.1f s\n", duration_ms / 1000.0f);
     }
 
     /// @todo Add Madgwick filtering to compute an attitude time series.
