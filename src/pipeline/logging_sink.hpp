@@ -39,7 +39,7 @@ namespace sf::pipeline {
             const uint32_t n = ++temp_count_;
             std::printf("[TEMP  #%5u]  t=%7.1f s  temp=%6.2f °C  in_water=%d\n",
                         n,
-                        s.elapsed_time_ds / 10.0f,
+                        s.elapsed_time_ms / 1000.0f,
                         s.temp_c,
                         static_cast<int>(s.in_water));
             std::fflush(stdout);
@@ -56,10 +56,18 @@ namespace sf::pipeline {
                 "                         "
                 "  mx=%7.1f  my=%7.1f  mz=%7.1f uT\n",
                 n,
-                s.elapsed_time_ds / 10.0f,
+                s.elapsed_time_ms / 1000.0f,
                 s.accel_ms2[0], s.accel_ms2[1], s.accel_ms2[2],
                 s.gyro_dps[0], s.gyro_dps[1], s.gyro_dps[2],
                 s.mag_uT[0], s.mag_uT[1], s.mag_uT[2]);
+            std::fflush(stdout);
+        }
+
+        void on_fw_version(const sf::protocol::DecodedFwVersion &s) override
+        {
+            std::printf("[FWVER      ]  t=%7.1f s  version=%s\n",
+                        s.elapsed_time_ms / 1000.0f,
+                        s.version);
             std::fflush(stdout);
         }
 
