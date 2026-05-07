@@ -7,8 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(SMARTFIN_PROTOCOL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol)
-set(SMARTFIN_MATH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/proccessing/math)
+set(SMARTFIN_PROTOCOL_DIR    ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol)
+set(SMARTFIN_PROCESSING_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/proccessing)
+set(SMARTFIN_MATH_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/src/proccessing/math)
 
 option(SMARTFIN_ENABLE_SIMPLEBLE "Enable SimpleBLE transport" ON)
 
@@ -38,18 +39,22 @@ add_library(smartfin_math STATIC
 )
 target_include_directories(smartfin_math PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_PROCESSING_DIR}
     ${SMARTFIN_MATH_DIR}
 )
 target_compile_features(smartfin_math PUBLIC cxx_std_20)
 
-add_library(smartfin_ahrs INTERFACE)
-target_include_directories(smartfin_ahrs INTERFACE
+add_library(smartfin_ahrs STATIC
+    src/proccessing/AHRS/madgwick_ahrs.cpp
+)
+target_include_directories(smartfin_ahrs PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/proccessing/AHRS
 )
-target_link_libraries(smartfin_ahrs INTERFACE
+target_link_libraries(smartfin_ahrs PUBLIC
     smartfin_math
     smartfin_protocol
 )
+target_compile_features(smartfin_ahrs PUBLIC cxx_std_20)
 
 # ── Session layer ─────────────────────────────────────────────────────────────
 # Depends on protocol; transport adapter is injected at runtime via IBleAdapter.
