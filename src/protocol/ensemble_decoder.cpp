@@ -23,12 +23,10 @@ static constexpr size_t TRANSPORT_HEADER_SIZE = 6;
  */
 static constexpr size_t ENSEMBLE_HEADER_SIZE = 3;
 
-static constexpr size_t TEMP_PAYLOAD_SIZE         =  3; ///< ENS_TEMP (0x01): int16 + uint8
-static constexpr size_t IMU_PAYLOAD_SIZE           = 18; ///< ENS_TEMP_HIGH_DATA_RATE_IMU (0x0C): 3×int16 accel + 3×int16 gyro + 3×int16 mag
-static constexpr size_t BATT_PAYLOAD_SIZE          =  2; ///< ENS_BATT (0x07): uint16
-static constexpr size_t TEMP_TIME_PAYLOAD_SIZE     =  7; ///< ENS_TEMP_TIME (0x08): int16 + uint8 + uint32
-static constexpr size_t TEMP_IMU_PAYLOAD_SIZE      = 21; ///< ENS_TEMP_IMU (0x0A): int16 + uint8 + 3×int16 + 3×int16 + 3×int16
-static constexpr size_t TEMP_IMU_GPS_PAYLOAD_SIZE  = 29; ///< ENS_TEMP_IMU_GPS (0x0B): TEMP_IMU + 2×int32
+static constexpr size_t TEMP_PAYLOAD_SIZE = 3;  ///< ENS_TEMP (0x01): int16 + uint8
+static constexpr size_t IMU_PAYLOAD_SIZE  = 18; ///< ENS_TEMP_HIGH_DATA_RATE_IMU (0x0C): 3×int16 accel + 3×int16 gyro + 3×int16 mag
+static constexpr size_t TEXT_NCHARS_SIZE  = 1;  ///< ENS_TEXT (0x0F): nChars prefix byte
+static constexpr size_t TEXT_MAX_CHARS    = 32; ///< ENS_TEXT (0x0F): firmware-enforced max string length
 
 static inline uint16_t read_u16_le(const uint8_t* p) {
     return static_cast<uint16_t>(p[0]) | (static_cast<uint16_t>(p[1]) << 8);
@@ -122,6 +120,25 @@ bool decode_packet(std::span<const uint8_t> packet,
 
             out.push_back(imu);
             offset += record_size;
+            continue;
+        }
+
+        if (ens_type == static_cast<uint8_t>(EnsembleId::Text)) {
+            const size_t min_record = ENSEMBLE_HEADER_SIZE + TEXT_NCHARS_SIZE;
+            if (offset + min_record > end) break;
+
+            const uint8_t* payload = packet.data() + offset + ENSEMBLE_HEADER_SIZE;
+            const size_t   nchars  = std::min<size_t>(payload[0], TEXT_MAX_CHARS);
+
+            if (offset + min_record + nchars > end) break;
+
+            DecodedFwVersion fwv{};
+            fwv.elapsed_time_ds = elapsed_ds;
+            std::memcpy(fwv.version, payload + TEXT_NCHARS_SIZE, nchars);
+            fwv.version[nchars] = '\0';
+
+            out.push_back(fwv);
+            offset += min_record + nchars;
             continue;
         }
 

@@ -17,6 +17,7 @@ namespace sf::protocol {
 enum class EnsembleId : uint8_t {
     Temp            = 0x01, ///< Temperature only — SS_Ensemble01_Func.
     TempHighRateImu = 0x0C, ///< High-rate IMU payload — SS_Ensemble12_x0C.
+    Text            = 0x0F, ///< ASCII text payload — SS_fwVerFunc.
 };
 
 /**
@@ -32,16 +33,27 @@ struct DecodedTemp {
  * @brief Decoded payload for ENS_TEMP_HIGH_DATA_RATE_IMU (0x0C), Ensemble12_data_t.
  *
  * Fixed-point wire values are scaled to physical units on decode:
- * Q14 → m/s², Q7 → deg/s, Q3 → µT.
+ * Q14 → m/s^2, Q7 → deg/s, Q3 → uT.
  */
 struct DecodedImu {
     uint32_t elapsed_time_ds; ///< Deciseconds since session start.
-    float    accel_ms2[3];    ///< Linear acceleration in m/s² [x, y, z].
+    float accel_ms2[3];       ///< Linear acceleration in m/s^2 [x, y, z].
     float    gyro_dps[3];     ///< Angular rate in deg/s [x, y, z].
-    float    mag_uT[3];       ///< Magnetic field in µT [x, y, z].
+    float mag_uT[3];          ///< Magnetic field in uT [x, y, z].
 };
 
-using DecodedEnsemble = std::variant<DecodedTemp, DecodedImu>;
+/**
+ * @brief Decoded payload for ENS_TEXT (0x0F) — SS_fwVerFunc.
+ *
+ * Wire layout: uint8_t nChars, char verBuf[nChars] (no null terminator).
+ * Format: "FW<major>.<minor>.<build><branch>", max 32 chars.
+ */
+struct DecodedFwVersion {
+    uint32_t elapsed_time_ds;
+    char     version[33]; ///< Null-terminated version string, max 32 wire chars.
+};
+
+using DecodedEnsemble = std::variant<DecodedTemp, DecodedImu, DecodedFwVersion>;
 
 } // namespace sf::protocol
 
