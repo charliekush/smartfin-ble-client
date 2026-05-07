@@ -1,18 +1,22 @@
-# smartfin-ble-client
+# Architecture
 
-Shared Smartfin protocol definitions and decoding libraries for BLE telemetry, with optional host-side transport adapters for testing and client development.
+## Purpose
 
-## Overview
+This repository is the source of truth for the Smartfin host-side telemetry protocol.
 
-This repository is the source of truth for the Smartfin host-side telemetry protocol. Its job is to give every consumer the same interpretation of Smartfin telemetry bytes while leaving BLE transport details to the platform that uses them.
+Its role is to ensure that every consumer interprets Smartfin telemetry bytes the same way while allowing each platform to use its own BLE transport implementation.
 
-That separation helps prevent protocol drift between:
+This architecture is intended to prevent protocol drift between:
 
 - firmware in [`smartfin-fw3`](https://github.com/UCSD-E4E/smartfin-fw3)
 - desktop and lab tooling
 - future client applications such as the Apple Watch app
 
-## What This Repository Owns
+## Ownership Boundaries
+
+### In scope
+
+This repository owns:
 
 - BLE telemetry packet framing
 - ensemble IDs and protocol constants
@@ -24,14 +28,16 @@ That separation helps prevent protocol drift between:
 - conformance tests
 - optional host-side BLE transport adapters for testing
 
-## What It Does Not Own
+### Out of scope
+
+This repository does not own:
 
 - firmware measurement logic
 - embedded BLE stack behavior
 - Apple Watch app UI or lifecycle code
 - platform-specific presentation models
 
-## Architecture
+## Layered Design
 
 The system is split into three layers:
 
@@ -39,32 +45,49 @@ The system is split into three layers:
 2. Transport adapters
 3. Client applications and tools
 
-### Protocol layer
+### 1. Protocol layer
 
-The protocol layer is shared across all consumers and is responsible for:
+The protocol layer is shared across all consumers. It is responsible for converting raw telemetry bytes into consistent, validated, structured data.
 
-- decoding BLE transport packet headers
-- iterating packed ensemble records
-- decoding known ensemble payloads
-- applying field scaling and validation
+Responsibilities:
 
-This is the canonical bytes-to-meaning layer.
+- decode BLE transport packet headers
+- iterate packed ensemble records
+- decode known ensemble payloads
+- apply field scaling and validation
 
-### Transport adapter layer
+This is the canonical bytes-to-meaning layer. Any consumer that needs to understand Smartfin telemetry should rely on this layer rather than reimplementing protocol parsing independently.
 
-Transport adapters are optional and platform-specific. They are responsible for:
+### 2. Transport adapter layer
 
-- scanning
-- connecting
-- subscribing to telemetry notifications
-- writing control messages
-- delivering raw bytes to the protocol decoder
+Transport adapters are optional and platform-specific. Their job is to move raw bytes between the device and the protocol decoder without owning protocol interpretation.
 
-Examples include a `SimpleBLE` adapter for desktop testing and a future native Apple transport built with `CoreBluetooth`.
+Responsibilities:
 
-### Application layer
+- scan for devices
+- connect
+- subscribe to telemetry notifications
+- write control messages
+- deliver raw bytes to the protocol decoder
 
-Applications and tools consume decoded telemetry and decide how to use it. Examples include logging tools, protocol test harnesses, and client applications.
+Examples:
+
+- a `SimpleBLE` adapter for desktop and lab testing
+- a future native Apple transport built with `CoreBluetooth`
+
+Transport code should remain isolated from decoding logic so that protocol behavior stays portable and testable.
+
+### 3. Application layer
+
+Applications and tools consume decoded telemetry and decide how to use it.
+
+Examples:
+
+- logging tools
+- protocol test harnesses
+- client applications
+
+This layer owns presentation, workflow, and product behavior. It should not redefine protocol semantics.
 
 ## Optional SimpleBLE Support
 

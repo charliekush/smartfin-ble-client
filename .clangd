@@ -1,0 +1,6 @@
+CompileFlags:
+  CompilationDatabase: build
+  Compiler: /usr/bin/clang++
+
+Diagnostics:
+  UnusedIncludes: Strict
