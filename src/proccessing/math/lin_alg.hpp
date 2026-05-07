@@ -14,15 +14,16 @@ namespace math3d {
 /**
  * @brief Small threshold used for zero-magnitude and normalization checks.
  */
-constexpr float EPSILON = 1e-6f;
+constexpr double EPSILON = 1e-6f;
 
 /**
- * @brief Three-dimensional vector with single-precision components.
+ * @brief
+ *
  */
 struct Vec3 {
-    float x = 0.0f; ///< X component.
-    float y = 0.0f; ///< Y component.
-    float z = 0.0f; ///< Z component.
+    double x = 0.0f; ///< X component.
+    double y = 0.0f; ///< Y component.
+    double z = 0.0f; ///< Z component.
 
     /**
      * @brief Construct a zero vector.
@@ -35,7 +36,7 @@ struct Vec3 {
      * @param y_ Y component.
      * @param z_ Z component.
      */
-    constexpr Vec3(float x_, float y_, float z_)
+    constexpr Vec3(double x_, double y_, double z_)
         : x(x_), y(y_), z(z_) {}
 
     /**
@@ -69,7 +70,8 @@ struct Vec3 {
      * @param s Scale factor.
      * @return Scaled vector.
      */
-    constexpr Vec3 operator*(float s) const {
+    constexpr Vec3 operator*(double s) const
+    {
         return {x * s, y * s, z * s};
     }
 
@@ -78,7 +80,8 @@ struct Vec3 {
      * @param s Divisor.
      * @return Scaled vector.
      */
-    constexpr Vec3 operator/(float s) const {
+    constexpr Vec3 operator/(double s) const
+    {
         return {x / s, y / s, z / s};
     }
 
@@ -111,7 +114,8 @@ struct Vec3 {
      * @param s Scale factor.
      * @return Reference to this vector.
      */
-    Vec3& operator*=(float s) {
+    Vec3 &operator*=(double s)
+    {
         x *= s;
         y *= s;
         z *= s;
@@ -123,7 +127,8 @@ struct Vec3 {
      * @param s Divisor.
      * @return Reference to this vector.
      */
-    Vec3& operator/=(float s) {
+    Vec3 &operator/=(double s)
+    {
         x /= s;
         y /= s;
         z /= s;
@@ -137,7 +142,8 @@ struct Vec3 {
  * @param v Vector to scale.
  * @return Scaled vector.
  */
-constexpr Vec3 operator*(float s, Vec3 v) {
+constexpr Vec3 operator*(double s, Vec3 v)
+{
     return v * s;
 }
 
@@ -147,7 +153,7 @@ constexpr Vec3 operator*(float s, Vec3 v) {
  * @param b Right-hand operand.
  * @return Dot product.
  */
-float dot(Vec3 a, Vec3 b);
+double dot(Vec3 a, Vec3 b);
 
 /**
  * @brief Compute the cross product of two vectors.
@@ -162,14 +168,14 @@ Vec3 cross(Vec3 a, Vec3 b);
  * @param v Input vector.
  * @return Squared magnitude.
  */
-float normSquared(Vec3 v);
+double normSquared(Vec3 v);
 
 /**
  * @brief Compute the Euclidean norm of a vector.
  * @param v Input vector.
  * @return Magnitude.
  */
-float norm(Vec3 v);
+double norm(Vec3 v);
 
 /**
  * @brief Check whether all vector components are finite.
@@ -196,10 +202,10 @@ Vec3 normalize(Vec3 v);
  * @brief Quaternion with scalar-first storage.
  */
 struct Quaternion {
-    float w = 1.0f; ///< Scalar component.
-    float x = 0.0f; ///< X vector component.
-    float y = 0.0f; ///< Y vector component.
-    float z = 0.0f; ///< Z vector component.
+    double w = 1.0f; ///< Scalar component.
+    double x = 0.0f; ///< X vector component.
+    double y = 0.0f; ///< Y vector component.
+    double z = 0.0f; ///< Z vector component.
 
     /**
      * @brief Construct the identity quaternion.
@@ -213,7 +219,7 @@ struct Quaternion {
      * @param y_ Y vector component.
      * @param z_ Z vector component.
      */
-    constexpr Quaternion(float w_, float x_, float y_, float z_)
+    constexpr Quaternion(double w_, double x_, double y_, double z_)
         : w(w_), x(x_), y(y_), z(z_) {}
 
     /**
@@ -274,7 +280,8 @@ struct Quaternion {
      * @param s Scale factor.
      * @return Scaled quaternion.
      */
-    constexpr Quaternion operator*(float s) const {
+    constexpr Quaternion operator*(double s) const
+    {
         return {
             w * s,
             x * s,
@@ -301,7 +308,8 @@ struct Quaternion {
      * @param s Scale factor.
      * @return Reference to this quaternion.
      */
-    Quaternion& operator*=(float s) {
+    Quaternion &operator*=(double s)
+    {
         w *= s;
         x *= s;
         y *= s;
@@ -316,7 +324,8 @@ struct Quaternion {
  * @param q Quaternion to scale.
  * @return Scaled quaternion.
  */
-constexpr Quaternion operator*(float s, Quaternion q) {
+constexpr Quaternion operator*(double s, Quaternion q)
+{
     return q * s;
 }
 
@@ -333,14 +342,14 @@ Quaternion operator*(Quaternion a, Quaternion b);
  * @param q Input quaternion.
  * @return Squared magnitude.
  */
-float normSquared(Quaternion q);
+double normSquared(Quaternion q);
 
 /**
  * @brief Compute the Euclidean norm of a quaternion.
  * @param q Input quaternion.
  * @return Magnitude.
  */
-float norm(Quaternion q);
+double norm(Quaternion q);
 
 /**
  * @brief Check whether all quaternion components are finite.
