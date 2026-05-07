@@ -42,6 +42,15 @@ target_include_directories(smartfin_math PUBLIC
 )
 target_compile_features(smartfin_math PUBLIC cxx_std_20)
 
+add_library(smartfin_ahrs INTERFACE)
+target_include_directories(smartfin_ahrs INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/proccessing/AHRS
+)
+target_link_libraries(smartfin_ahrs INTERFACE
+    smartfin_math
+    smartfin_protocol
+)
+
 # ── Session layer ─────────────────────────────────────────────────────────────
 # Depends on protocol; transport adapter is injected at runtime via IBleAdapter.
 add_library(smartfin_session STATIC
