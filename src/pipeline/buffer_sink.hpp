@@ -12,6 +12,7 @@
 #include "sample_sink.hpp"
 #include "protocol/ensemble_types.hpp"
 
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -55,6 +56,14 @@ public:
      */
     void on_imu(const sf::protocol::DecodedImu& s) override {
         imu_.push_back(s);
+    }
+
+    /**
+     * @brief Store the firmware version string (last received wins).
+     * @param s  Decoded firmware version ensemble.
+     */
+    void on_fw_version(const sf::protocol::DecodedFwVersion& s) override {
+        fw_version_ = s;
     }
 
     /**

@@ -89,6 +89,8 @@ void Session::dispatch(const sf::protocol::DecodedEnsemble& ens) {
             sink_.on_temperature(sample);
         } else if constexpr (std::is_same_v<T, sf::protocol::DecodedImu>) {
             sink_.on_imu(sample);
+        } else if constexpr (std::is_same_v<T, sf::protocol::DecodedFwVersion>) {
+            sink_.on_fw_version(sample);
         }
     }, ens);
 }

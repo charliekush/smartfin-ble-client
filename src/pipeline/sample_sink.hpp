@@ -48,6 +48,12 @@ namespace sf::pipeline {
          * @param sample  Decoded accel, gyro, and magnetometer vectors.
          */
         virtual void on_imu(const sf::protocol::DecodedImu &sample) = 0;
+
+        /**
+         * @brief Called once when a firmware version ensemble is received.
+         * @param sample  Null-terminated version string and timestamp.
+         */
+        virtual void on_fw_version(const sf::protocol::DecodedFwVersion &sample) = 0;
     };
 
 }
