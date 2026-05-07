@@ -34,14 +34,16 @@ bool SimpleBleAdapter::scan_and_connect(const std::string& device_name,
         return false;
     }
 
-    auto& adapter = adapters[0];
-    std::cout << "[ble] Using adapter: " << adapter.identifier() << "\n";
+    // Store the adapter as a member so CoreBluetooth's CBCentralManager stays
+    // alive for the full lifetime of the connection (not just this call).
+    adapter_ = std::move(adapters[0]);
+    std::cout << "[ble] Using adapter: " << adapter_->identifier() << "\n";
 
     std::mutex mtx;
     std::condition_variable cv;
     std::optional<SimpleBLE::Peripheral> found;
 
-    adapter.set_callback_on_scan_found([&](SimpleBLE::Peripheral p) {
+    adapter_->set_callback_on_scan_found([&](SimpleBLE::Peripheral p) {
         if (p.identifier() == device_name) {
             std::lock_guard lock(mtx);
             if (!found) {
@@ -53,7 +55,7 @@ bool SimpleBleAdapter::scan_and_connect(const std::string& device_name,
 
     std::cout << "[ble] Scanning for \"" << device_name
               << "\" (timeout=" << timeout_s << "s)...\n";
-    adapter.scan_start();
+    adapter_->scan_start();
 
     {
         std::unique_lock lock(mtx);
@@ -61,7 +63,7 @@ bool SimpleBleAdapter::scan_and_connect(const std::string& device_name,
                     [&] { return found.has_value(); });
     }
 
-    adapter.scan_stop();
+    adapter_->scan_stop();
 
     if (!found) {
         std::cerr << "[ble] Device \"" << device_name << "\" not found\n";
@@ -73,17 +75,27 @@ bool SimpleBleAdapter::scan_and_connect(const std::string& device_name,
               << "\" addr=" << peripheral_->address()
               << " rssi=" << peripheral_->rssi() << " dBm\n";
 
-    std::cout << "[ble] Connecting...\n";
-    try {
-        peripheral_->connect();
-    } catch (const std::exception& e) {
-        std::cerr << "[ble] connect() threw: " << e.what() << "\n";
-        peripheral_.reset();
-        return false;
+    // Brief pause: CoreBluetooth on macOS needs a moment after scan_stop
+    // before the peripheral is ready to accept a connection request.
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    constexpr int MAX_CONNECT_ATTEMPTS = 3;
+    for (int attempt = 1; attempt <= MAX_CONNECT_ATTEMPTS; ++attempt) {
+        std::cout << "[ble] Connecting (attempt " << attempt << "/" << MAX_CONNECT_ATTEMPTS << ")...\n";
+        try {
+            peripheral_->connect();
+            std::cout << "[ble] Connected  mtu=" << peripheral_->mtu() << "\n";
+            return true;
+        } catch (const std::exception& e) {
+            std::cerr << "[ble] connect() threw: " << e.what() << "\n";
+            if (attempt < MAX_CONNECT_ATTEMPTS) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(500 * attempt));
+            }
+        }
     }
 
-    std::cout << "[ble] Connected  mtu=" << peripheral_->mtu() << "\n";
-    return true;
+    peripheral_.reset();
+    return false;
 }
 
 bool SimpleBleAdapter::subscribe_notify(const std::string& service_uuid,

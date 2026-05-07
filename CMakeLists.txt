@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(SMARTFIN_PROTOCOL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol)
+set(SMARTFIN_MATH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/proccessing/math)
+
 option(SMARTFIN_ENABLE_SIMPLEBLE "Enable SimpleBLE transport" ON)
 
 if(SMARTFIN_ENABLE_SIMPLEBLE)
@@ -26,8 +29,18 @@ add_library(smartfin_protocol STATIC
 )
 target_include_directories(smartfin_protocol PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_PROTOCOL_DIR}
 )
 target_compile_features(smartfin_protocol PUBLIC cxx_std_20)
+
+add_library(smartfin_math STATIC
+    src/proccessing/math/lin_alg.cpp
+)
+target_include_directories(smartfin_math PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_MATH_DIR}
+)
+target_compile_features(smartfin_math PUBLIC cxx_std_20)
 
 # ── Session layer ─────────────────────────────────────────────────────────────
 # Depends on protocol; transport adapter is injected at runtime via IBleAdapter.
@@ -59,11 +72,31 @@ add_executable(ble_receiver
 )
 target_include_directories(ble_receiver PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_PROTOCOL_DIR}
+    ${SMARTFIN_MATH_DIR}
 )
 target_link_libraries(ble_receiver PRIVATE
+    smartfin_math
     smartfin_protocol
     smartfin_session
 )
 if(SMARTFIN_ENABLE_SIMPLEBLE)
     target_link_libraries(ble_receiver PRIVATE smartfin_transport)
+endif()
+
+# ── BLE logger (interactive test tool) ───────────────────────────────────────
+# Streams ensembles from the fin and prints each one to stdout in real time.
+# Usage: ./ble_logger   (Ctrl-C to stop)
+if(SMARTFIN_ENABLE_SIMPLEBLE)
+    add_executable(ble_logger
+        tools/ble_logger.cpp
+    )
+    target_include_directories(ble_logger PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    target_link_libraries(ble_logger PRIVATE
+        smartfin_protocol
+        smartfin_session
+        smartfin_transport
+    )
 endif()

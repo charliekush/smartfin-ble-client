@@ -85,6 +85,14 @@ public:
 
 private:
     /**
+     * @brief Active Bluetooth adapter handle.
+     *
+     * Must outlive any connected peripheral — CoreBluetooth (macOS) requires
+     * the CBCentralManager to remain alive for the duration of the connection.
+     */
+    std::optional<SimpleBLE::Adapter>    adapter_;
+
+    /**
      * @brief Connected peripheral handle.
      */
     std::optional<SimpleBLE::Peripheral> peripheral_;
