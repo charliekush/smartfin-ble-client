@@ -144,16 +144,12 @@ Enhancement suggestions are tracked as [GitHub issues](https://github.com/UCSD-E
 ### Your First Code Contribution
 1. Install the following tools:
     1. Visual Studio Code
-    2. Docker
-    3. Doxygen
+    2. Doxygen
 2. Clone this repository to your working directory
 3. Initialize all submodules
 4. Open this folder in Visual Studio Code
 5. Install all recommended extensions (see [.vscode/extensions.json](https://github.com/UCSD-E4E/smartfin-fw3/blob/main/.vscode/extensions.json))
-6. Ensure that you can build the firmware (`Particle: Compile application (local)`)
-7. Ensure that you can build the PC build
-    1. `docker build --pull --rm -f 'Dockerfile' -t 'smartfinfw3:latest' .`
-    2. `docker run --rm -it smartfinfw3:latest`
+6. 
 8. Ensure that you can build the documentation using Doxygen and PlantUML
 9. Familiarize yourself with the system documentation in [docs]
 

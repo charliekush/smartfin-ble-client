@@ -83,16 +83,25 @@ public:
     }
 
     /**
+     * @brief Return the firmware version if one was received this session.
+     */
+    const std::optional<sf::protocol::DecodedFwVersion>& fw_version() const {
+        return fw_version_;
+    }
+
+    /**
      * @brief Discard all buffered samples.
      */
     void clear() {
         temps_.clear();
         imu_.clear();
+        fw_version_.reset();
     }
 
 private:
-    std::vector<sf::protocol::DecodedTemp> temps_; ///< Accumulated temperature samples.
-    std::vector<sf::protocol::DecodedImu>  imu_;   ///< Accumulated IMU samples.
+    std::vector<sf::protocol::DecodedTemp>              temps_;      ///< Accumulated temperature samples.
+    std::vector<sf::protocol::DecodedImu>               imu_;        ///< Accumulated IMU samples.
+    std::optional<sf::protocol::DecodedFwVersion>       fw_version_; ///< Most recent firmware version, if received.
 };
 
 } // namespace sf::pipeline
