@@ -1,10 +1,10 @@
 /**
  * @file lin_alg.hpp
  * @author Charlie Kushelevsky (charliekushelevsky@gmail.com)
- * @brief Linear algebra primitives used by the offline processing pipeline.
+ * @brief Linear algebra primitives
  * @date 2026-04-30
- * 
- * 
+ *
+ *
  */
 #ifndef LIN_ALG_HPP
 #define LIN_ALG_HPP

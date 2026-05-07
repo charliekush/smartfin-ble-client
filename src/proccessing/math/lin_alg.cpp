@@ -1,3 +1,12 @@
+/**
+ * @file lin_alg.cpp
+ * @author Charlie Kushelevsky (charliekushelevsky@gmail.com)
+ * @brief linear algebra primitives implementation.
+ * @date 2026-05-07
+ *
+ *
+ */
+
 #include "proccessing/math/lin_alg.hpp"
 
 #include <cmath>
