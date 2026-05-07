@@ -23,32 +23,30 @@ static constexpr size_t TRANSPORT_HEADER_SIZE = 6;
  */
 static constexpr size_t ENSEMBLE_HEADER_SIZE = 3;
 
-/**
- * @brief Size in bytes of an ENS_TEMP payload.
- */
-static constexpr size_t TEMP_PAYLOAD_SIZE = 3;
+static constexpr size_t TEMP_PAYLOAD_SIZE         =  3; ///< ENS_TEMP (0x01): int16 + uint8
+static constexpr size_t IMU_PAYLOAD_SIZE           = 18; ///< ENS_TEMP_HIGH_DATA_RATE_IMU (0x0C): 3×int16 accel + 3×int16 gyro + 3×int16 mag
+static constexpr size_t BATT_PAYLOAD_SIZE          =  2; ///< ENS_BATT (0x07): uint16
+static constexpr size_t TEMP_TIME_PAYLOAD_SIZE     =  7; ///< ENS_TEMP_TIME (0x08): int16 + uint8 + uint32
+static constexpr size_t TEMP_IMU_PAYLOAD_SIZE      = 21; ///< ENS_TEMP_IMU (0x0A): int16 + uint8 + 3×int16 + 3×int16 + 3×int16
+static constexpr size_t TEMP_IMU_GPS_PAYLOAD_SIZE  = 29; ///< ENS_TEMP_IMU_GPS (0x0B): TEMP_IMU + 2×int32
 
-/**
- * @brief Size in bytes of an ENS_TEMP_HIGH_DATA_RATE_IMU payload.
- */
-static constexpr size_t IMU_PAYLOAD_SIZE  = 18;
-
-/**
- * @brief Read a little-endian unsigned 16-bit integer.
- * @param p Pointer to the first byte.
- * @return Decoded unsigned 16-bit value.
- */
 static inline uint16_t read_u16_le(const uint8_t* p) {
     return static_cast<uint16_t>(p[0]) | (static_cast<uint16_t>(p[1]) << 8);
 }
 
-/**
- * @brief Read a little-endian signed 16-bit integer.
- * @param p Pointer to the first byte.
- * @return Decoded signed 16-bit value.
- */
 static inline int16_t read_i16_le(const uint8_t* p) {
     return static_cast<int16_t>(read_u16_le(p));
+}
+
+static inline uint32_t read_u32_le(const uint8_t* p) {
+    return static_cast<uint32_t>(p[0])
+         | (static_cast<uint32_t>(p[1]) << 8)
+         | (static_cast<uint32_t>(p[2]) << 16)
+         | (static_cast<uint32_t>(p[3]) << 24);
+}
+
+static inline int32_t read_i32_le(const uint8_t* p) {
+    return static_cast<int32_t>(read_u32_le(p));
 }
 
 /**
