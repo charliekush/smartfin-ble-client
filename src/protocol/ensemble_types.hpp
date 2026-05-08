@@ -16,9 +16,9 @@ namespace sf::protocol {
 
     enum class EnsembleId : uint8_t
     {
-        Temp = 0x01,            ///< Temperature only — SS_Ensemble01_Func.
-        RawHighRateImu = 0x0C,  ///< High-rate IMU payload — SS_Ensemble12_x0C.
-        QuatHighRateImu = 0x0C, ///< High-rate IMU payload — SS_Ensemble12_x0C.
+        Temp = 0x01,            ///< temperature only
+        RawHighRateImu = 0x0C,  ///< raw IMU payload
+        QuatHighRateImu = 0x0D, ///<  IMU payload w/ quaternion
         Text = 0x0F,            ///< ASCII text payload — SS_fwVerFunc.
     };
 
@@ -43,6 +43,17 @@ struct DecodedImu {
     float accel_ms2[3];       ///< Linear acceleration in m/s^2 [x, y, z].
     float gyro_dps[3];        ///< Angular rate in deg/s [x, y, z].
     float mag_uT[3];          ///< Magnetic field in uT [x, y, z].
+};
+struct DecodedQuatImu
+{
+    uint32_t elapsed_time_ms; ///< Milliseconds since session start.
+    float accel_ms2[3];       ///< Linear acceleration in m/s^2 [x, y, z].
+    float gyro_dps[3];        ///< Angular rate in deg/s [x, y, z].
+    float mag_uT[3];          ///< Magnetic field in uT [x, y, z].
+
+    float q[4]; ///< [q0, q1, q2, q3] — full quaternion
+    float heading_accuracy_deg;
+    bool quat_valid; ///< false if accuracy > threshold
 };
 
 /**
