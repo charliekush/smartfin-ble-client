@@ -30,5 +30,21 @@ namespace sf::ahrs {
             static_cast<double>(imu.mag_uT[1]),
             static_cast<double>(imu.mag_uT[2])};
     }
+    AHRS::AHRS(const Config &config) : config_(config) {}
+
+    void AHRS::reset()
+    {
+        state_ = State{};
+    }
+
+    void AHRS::reset(math3d::Vec3 initial_gyro_bias_rad_s)
+    {
+        state_ = State{};
+        state_.gyro_bias_rad_s = initial_gyro_bias_rad_s;
+    }
+
+    const Config &AHRS::config() const { return config_; }
+    void AHRS::setConfig(const Config &config) { config_ = config; }
+    const State &AHRS::state() const { return state_; }
 
 } // namespace sf::ahrs
