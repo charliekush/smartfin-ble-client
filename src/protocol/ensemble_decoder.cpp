@@ -135,14 +135,16 @@ bool decode_packet(std::span<const uint8_t> packet,
             DecodedQuatImu imu{};
             imu.elapsed_time_ms = elapsed_ms;
 
-            for (int i = 0; i < 3; ++i) {
-                imu.accel_ms2[i] = read_i16_le(payload + i * 2)       / 16384.0f;
-                imu.gyro_dps[i]  = read_i16_le(payload + 6  + i * 2)  / 128.0f;
-                imu.mag_uT[i]    = read_i16_le(payload + 12 + i * 2)  / 8.0f;
-            }
+            static constexpr float Q14 = 16384.0f;
+            static constexpr float Q7 = 128.0f;
+            static constexpr float Q3 = 8.0f;
+            static constexpr float Q30 = 1073741824.0f;
 
-            // Q30 fixed-point scale: 2^30 = 1073741824
-            constexpr double Q30 = 1073741824.0;
+            for (int i = 0; i < 3; ++i) {
+                imu.accel_ms2[i] = read_i16_le(payload + i * 2) / Q14;
+                imu.gyro_dps[i] = read_i16_le(payload + 6 + i * 2) / Q7;
+                imu.mag_uT[i] = read_i16_le(payload + 12 + i * 2) / Q3;
+            }
 
             const double q1 = read_i32_le(payload + 18) / Q30;
             const double q2 = read_i32_le(payload + 22) / Q30;
@@ -156,7 +158,7 @@ bool decode_packet(std::span<const uint8_t> packet,
             imu.q[3] = static_cast<float>(q3);
 
             imu.heading_accuracy_deg =
-                static_cast<float>(read_i32_le(payload + 30) / Q30);
+                static_cast<float>(read_i32_le(payload + 30) / 3096.0f);
             imu.quat_valid = imu.heading_accuracy_deg < 10.0f;
 
             out.push_back(imu);
