@@ -12,9 +12,16 @@
 
 #include <numbers>
 
-constexpr CFG::Scalar G0         = 9.80665;                      ///< Standard gravity in m/s².
-constexpr CFG::Scalar DEG_TO_RAD = std::numbers::pi / 180.0;    ///< Degrees to radians.
-constexpr CFG::Scalar RAD_TO_DEG = 180.0 / std::numbers::pi;    ///< Radians to degrees.
-constexpr CFG::Scalar MS_TO_S    = 1e-3;                         ///< Milliseconds to seconds.
+/// @brief Standard gravity in m/s^2.
+constexpr CFG::Scalar G0 = 9.80665;
+
+/// @brief Degrees to radians.
+constexpr CFG::Scalar DEG_TO_RAD = std::numbers::pi / 180.0;
+
+/// @brief Radians to degrees.
+constexpr CFG::Scalar RAD_TO_DEG = 180.0 / std::numbers::pi;
+
+/// @brief Milliseconds to seconds.
+constexpr CFG::Scalar MS_TO_S = 1e-3;
 
 #endif // CONSTANTS_HPP
