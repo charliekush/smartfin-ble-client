@@ -100,7 +100,8 @@ bool decode_packet(std::span<const uint8_t> packet,
             continue;
         }
 
-        if (ens_type == static_cast<uint8_t>(EnsembleId::TempHighRateImu)) {
+        if (ens_type == static_cast<uint8_t>(EnsembleId::RawHighRateImu))
+        {
             /// Ensemble12_data_t stores 3 accel, 3 gyro, and 3 magnetometer samples.
             const size_t record_size = ENSEMBLE_HEADER_SIZE + IMU_PAYLOAD_SIZE;
             if (offset + record_size > end) break;

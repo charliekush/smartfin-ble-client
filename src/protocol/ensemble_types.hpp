@@ -14,20 +14,23 @@
 
 namespace sf::protocol {
 
-enum class EnsembleId : uint8_t {
-    Temp            = 0x01, ///< Temperature only — SS_Ensemble01_Func.
-    TempHighRateImu = 0x0C, ///< High-rate IMU payload — SS_Ensemble12_x0C.
-    Text            = 0x0F, ///< ASCII text payload — SS_fwVerFunc.
-};
+    enum class EnsembleId : uint8_t
+    {
+        Temp = 0x01,            ///< Temperature only — SS_Ensemble01_Func.
+        RawHighRateImu = 0x0C,  ///< High-rate IMU payload — SS_Ensemble12_x0C.
+        QuatHighRateImu = 0x0C, ///< High-rate IMU payload — SS_Ensemble12_x0C.
+        Text = 0x0F,            ///< ASCII text payload — SS_fwVerFunc.
+    };
 
-/**
- * @brief Decoded payload for ENS_TEMP (0x01), Ensemble01_data_t.
- */
-struct DecodedTemp {
-    uint32_t elapsed_time_ms; ///< Milliseconds since session start.
-    float    temp_c;          ///< Water temperature in degrees Celsius.
-    bool     in_water;        ///< True when the fin detects water immersion.
-};
+    /**
+     * @brief Decoded payload for ENS_TEMP (0x01), Ensemble01_data_t.
+     */
+    struct DecodedTemp
+    {
+        uint32_t elapsed_time_ms; ///< Milliseconds since session start.
+        float temp_c;             ///< Water temperature in degrees Celsius.
+        bool in_water;            ///< True when the fin detects water immersion.
+    };
 
 /**
  * @brief Decoded payload for ENS_TEMP_HIGH_DATA_RATE_IMU (0x0C), Ensemble12_data_t.
