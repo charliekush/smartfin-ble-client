@@ -8,6 +8,7 @@
 
 #include "ensemble_decoder.hpp"
 
+#include <cmath>
 #include <cstring>
 #include <span>
 
@@ -25,6 +26,7 @@ static constexpr size_t ENSEMBLE_HEADER_SIZE = 4;
 
 static constexpr size_t TEMP_PAYLOAD_SIZE = 3;  ///< ENS_TEMP (0x01): int16 + uint8
 static constexpr size_t IMU_PAYLOAD_SIZE  = 18; ///< ENS_TEMP_HIGH_DATA_RATE_IMU (0x0C): 3×int16 accel + 3×int16 gyro + 3×int16 mag
+static constexpr size_t QUAT_PAYLOAD_SIZE = 34;
 static constexpr size_t TEXT_NCHARS_SIZE  = 1;  ///< ENS_TEXT (0x0F): nChars prefix byte
 static constexpr size_t TEXT_MAX_CHARS    = 32; ///< ENS_TEXT (0x0F): firmware-enforced max string length
 
@@ -121,7 +123,46 @@ bool decode_packet(std::span<const uint8_t> packet,
             offset += record_size;
             continue;
         }
+        if (ens_type == static_cast<uint8_t>(EnsembleId::QuatHighRateImu))
+        {
+            const size_t record_size = ENSEMBLE_HEADER_SIZE + QUAT_PAYLOAD_SIZE;
+            if (offset + record_size > end)
+                break;
 
+            const uint8_t* payload =
+                packet.data() + offset + ENSEMBLE_HEADER_SIZE;
+
+            DecodedQuatImu imu{};
+            imu.elapsed_time_ms = elapsed_ms;
+
+            for (int i = 0; i < 3; ++i) {
+                imu.accel_ms2[i] = read_i16_le(payload + i * 2)       / 16384.0f;
+                imu.gyro_dps[i]  = read_i16_le(payload + 6  + i * 2)  / 128.0f;
+                imu.mag_uT[i]    = read_i16_le(payload + 12 + i * 2)  / 8.0f;
+            }
+
+            // Q30 fixed-point scale: 2^30 = 1073741824
+            constexpr double Q30 = 1073741824.0;
+
+            const double q1 = read_i32_le(payload + 18) / Q30;
+            const double q2 = read_i32_le(payload + 22) / Q30;
+            const double q3 = read_i32_le(payload + 26) / Q30;
+            const double sq = 1.0 - q1*q1 - q2*q2 - q3*q3;
+            const double q0 = std::sqrt(sq > 0.0 ? sq : 0.0);
+
+            imu.q[0] = static_cast<float>(q0);
+            imu.q[1] = static_cast<float>(q1);
+            imu.q[2] = static_cast<float>(q2);
+            imu.q[3] = static_cast<float>(q3);
+
+            imu.heading_accuracy_deg =
+                static_cast<float>(read_i32_le(payload + 30) / Q30);
+            imu.quat_valid = imu.heading_accuracy_deg < 10.0f;
+
+            out.push_back(imu);
+            offset += record_size;
+            continue;
+        }
         if (ens_type == static_cast<uint8_t>(EnsembleId::Text)) {
             const size_t min_record = ENSEMBLE_HEADER_SIZE + TEXT_NCHARS_SIZE;
             if (offset + min_record > end) break;
