@@ -1,7 +1,7 @@
 /**
  * @file ensemble_decoder.hpp
  * @author Charlie Kushelevsky (charliekushelevsky@gmail.com)
- * @brief BLE packet decoder: transport header → typed ensemble structs.
+ * @brief BLE packet decoder: transport header -> typed ensemble structs.
  * @date 2026-04-30
  * 
  */

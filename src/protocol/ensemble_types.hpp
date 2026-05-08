@@ -33,7 +33,7 @@ struct DecodedTemp {
  * @brief Decoded payload for ENS_TEMP_HIGH_DATA_RATE_IMU (0x0C), Ensemble12_data_t.
  *
  * Fixed-point wire values are scaled to physical units on decode:
- * Q14 → m/s^2, Q7 → deg/s, Q3 → uT.
+ * Q14 -> m/s^2, Q7 -> deg/s, Q3 -> uT.
  */
 struct DecodedImu {
     uint32_t elapsed_time_ms; ///< Milliseconds since session start.
