@@ -15,7 +15,6 @@
 #include <cstdio>
 #include <cstring>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -101,7 +100,7 @@ namespace sf::pipeline {
      * Each record is a 1-byte RecordTag followed by the matching packed wire
      * struct. The file opens with a FileHeader for version detection.
      *
-     * Writes are synchronous but negligibly cheap at 55 Hz (2 KB/s).
+     * Writes are synchronous but negligibly cheap at 55 Hz (~2 KB/s).
      * The file is flushed and closed when the sink is destroyed.
      *
      * @par Usage
@@ -122,26 +121,12 @@ namespace sf::pipeline {
          * @param path  Destination file path.
          * @throws std::runtime_error if the file cannot be opened.
          */
-        explicit FileSink(const std::string &path)
-        {
-            file_ = std::fopen(path.c_str(), "wb");
-            if (!file_)
-                throw std::runtime_error("FileSink: cannot open " + path);
-            const FileHeader hdr{};
-            std::fwrite(&hdr, sizeof(hdr), 1, file_);
-        }
+        explicit FileSink(const std::string &path);
 
         /**
          * @brief Flush and close the ride file.
          */
-        ~FileSink() override
-        {
-            if (file_)
-            {
-                std::fflush(file_);
-                std::fclose(file_);
-            }
-        }
+        ~FileSink() override;
 
         FileSink(const FileSink &) = delete;
         FileSink &operator=(const FileSink &) = delete;
@@ -150,64 +135,25 @@ namespace sf::pipeline {
          * @brief Write a temperature ensemble to the file.
          * @param s  Decoded temperature ensemble.
          */
-        void on_temperature(const sf::protocol::DecodedTemp &s) override
-        {
-            const WireTemp w{
-                s.elapsed_time_ms,
-                s.temp_c,
-                s.in_water ? uint8_t(1) : uint8_t(0)};
-            write_record(RecordTag::Temp, &w, sizeof(w));
-        }
+        void on_temperature(const sf::protocol::DecodedTemp &s) override;
 
         /**
          * @brief Write a raw IMU ensemble to the file.
          * @param s  Decoded IMU ensemble.
          */
-        void on_imu(const sf::protocol::DecodedImu &s) override
-        {
-            WireImu w{};
-            w.elapsed_time_ms = s.elapsed_time_ms;
-            for (int i = 0; i < 3; ++i)
-            {
-                w.accel_ms2[i] = s.accel_ms2[i];
-                w.gyro_dps[i] = s.gyro_dps[i];
-                w.mag_uT[i] = s.mag_uT[i];
-            }
-            write_record(RecordTag::Imu, &w, sizeof(w));
-        }
+        void on_imu(const sf::protocol::DecodedImu &s) override;
 
         /**
          * @brief Write a quaternion IMU ensemble to the file.
          * @param s  Decoded quaternion IMU ensemble.
          */
-        void on_quat_imu(const sf::protocol::DecodedQuatImu &s) override
-        {
-            WireQuatImu w{};
-            w.elapsed_time_ms = s.elapsed_time_ms;
-            for (int i = 0; i < 3; ++i)
-            {
-                w.accel_ms2[i] = s.accel_ms2[i];
-                w.gyro_dps[i] = s.gyro_dps[i];
-                w.mag_uT[i] = s.mag_uT[i];
-            }
-            for (int i = 0; i < 4; ++i)
-                w.q[i] = s.q[i];
-            w.heading_accuracy_deg = s.heading_accuracy_deg;
-            w.quat_valid = s.quat_valid ? uint8_t(1) : uint8_t(0);
-            write_record(RecordTag::QuatImu, &w, sizeof(w));
-        }
+        void on_quat_imu(const sf::protocol::DecodedQuatImu &s) override;
 
         /**
          * @brief Write a firmware version ensemble to the file.
          * @param s  Decoded firmware version ensemble.
          */
-        void on_fw_version(const sf::protocol::DecodedFwVersion &s) override
-        {
-            WireFwVer w{};
-            w.elapsed_time_ms = s.elapsed_time_ms;
-            std::memcpy(w.version, s.version, sizeof(w.version));
-            write_record(RecordTag::FwVer, &w, sizeof(w));
-        }
+        void on_fw_version(const sf::protocol::DecodedFwVersion &s) override;
 
     private:
         std::FILE *file_ = nullptr; ///< Handle to the open output file.
@@ -218,12 +164,7 @@ namespace sf::pipeline {
          * @param data  Pointer to the packed wire struct.
          * @param size  Size of the wire struct in bytes.
          */
-        void write_record(RecordTag tag, const void *data, std::size_t size)
-        {
-            const auto t = static_cast<uint8_t>(tag);
-            std::fwrite(&t, 1, 1, file_);
-            std::fwrite(data, size, 1, file_);
-        }
+        void write_record(RecordTag tag, const void *data, std::size_t size);
     };
 
     /**
@@ -231,11 +172,24 @@ namespace sf::pipeline {
      */
     struct RideData
     {
-        std::vector<sf::protocol::DecodedImu> imu;                ///< Raw IMU samples.
-        std::vector<sf::protocol::DecodedQuatImu> quat_imu;       ///< Quaternion IMU samples.
-        std::vector<sf::protocol::DecodedTemp> temps;             ///< Temperature samples.
-        std::optional<sf::protocol::DecodedFwVersion> fw_version; ///< Firmware version, if present.
+        /// Raw IMU samples
+        std::vector<sf::protocol::DecodedImu> imu;
+        /// Quaternion IMU samples
+        std::vector<sf::protocol::DecodedQuatImu> quat_imu;
+        /// Temperature samples
+        std::vector<sf::protocol::DecodedTemp> temps;
+        /// Firmware version, if present
+        std::optional<sf::protocol::DecodedFwVersion> fw_version;
     };
+
+    /**
+     * @brief Load a binary ride file produced by FileSink.
+     * @param path  Path to the .sfdat ride file.
+     * @return RideData populated with every decoded record.
+     * @throws std::runtime_error on file open failure, bad magic, or
+     *         unsupported version.
+     */
+    RideData load_ride(const std::string &path);
 
 } // namespace sf::pipeline
 
