@@ -73,18 +73,28 @@ public:
      */
     const State& state() const;
 
-    math3d::Quaternion orientationEarthToImu() const; ///< Earth-relative-to-IMU quaternion.
-    math3d::Quaternion orientationImuToEarth() const; ///< IMU-relative-to-Earth quaternion.
-    math3d::Vec3       gyroBiasRadS()          const; ///< Current estimated gyro bias.
-    math3d::Vec3       zeroGAcceleration()     const; ///< Body-frame zero-g acceleration.
-    math3d::Vec3       globalAcceleration()    const; ///< ENU-frame zero-g acceleration.
-    bool               initialized()           const; ///< True after startup ramp completes.
+    /// @brief Earth-relative-to-IMU quaternion.
+    math3d::Quaternion orientationEarthToImu() const;
+
+    /// @brief IMU-relative-to-Earth quaternion.
+    math3d::Quaternion orientationImuToEarth() const;
+
+    /// @brief Current estimated gyro bias.
+    math3d::Vec3 gyroBiasRadS() const;
+
+    /// @brief Body-frame zero-g acceleration.
+    math3d::Vec3 zeroGAcceleration() const;
+
+    /// @brief ENU-frame zero-g acceleration.
+    math3d::Vec3 globalAcceleration() const;
+
+    /// @brief True after startup ramp completes.
+    bool initialized() const;
 
 private:
     Config config_{};
     State  state_{};
 
-    Scalar computeDtS(std::uint32_t current_time_ms);
     Scalar computeGain() const;
 
     math3d::Vec3 updateGyroBias(math3d::Vec3 gyro_rad_s, Scalar dt_s, bool& bias_updated);
