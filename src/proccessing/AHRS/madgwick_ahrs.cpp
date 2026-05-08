@@ -8,9 +8,6 @@
  */
 #include "madgwick_ahrs.hpp"
 
-#include <cmath>
-#include <numbers>
-
 namespace sf::ahrs {
 
 
