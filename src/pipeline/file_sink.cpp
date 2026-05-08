@@ -173,4 +173,47 @@ RideData load_ride(const std::string &path)
     return data;
 }
 
+void replay_ride(const RideData &data, ISampleSink &sink)
+{
+    size_t ii = 0, qi = 0, ti = 0;
+
+    const uint32_t INF = UINT32_MAX;
+
+    // Emit fw_version at its timestamp, or at the very end if missing.
+    bool     fw_emitted = false;
+    uint32_t fw_time    = data.fw_version
+                              ? data.fw_version->elapsed_time_ms
+                              : INF;
+
+    while (ii < data.imu.size() ||
+           qi < data.quat_imu.size() ||
+           ti < data.temps.size())
+    {
+        uint32_t t_imu  = ii < data.imu.size()
+                              ? data.imu[ii].elapsed_time_ms : INF;
+        uint32_t t_quat = qi < data.quat_imu.size()
+                              ? data.quat_imu[qi].elapsed_time_ms : INF;
+        uint32_t t_temp = ti < data.temps.size()
+                              ? data.temps[ti].elapsed_time_ms : INF;
+
+        uint32_t next = std::min({t_imu, t_quat, t_temp});
+
+        if (!fw_emitted && fw_time <= next)
+        {
+            sink.on_fw_version(*data.fw_version);
+            fw_emitted = true;
+        }
+
+        if (t_imu <= t_quat && t_imu <= t_temp)
+            sink.on_imu(data.imu[ii++]);
+        else if (t_quat <= t_temp)
+            sink.on_quat_imu(data.quat_imu[qi++]);
+        else
+            sink.on_temperature(data.temps[ti++]);
+    }
+
+    if (!fw_emitted && data.fw_version)
+        sink.on_fw_version(*data.fw_version);
+}
+
 } // namespace sf::pipeline

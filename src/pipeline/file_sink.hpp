@@ -191,6 +191,19 @@ namespace sf::pipeline {
      */
     RideData load_ride(const std::string &path);
 
+    /**
+     * @brief Replay a RideData into any ISampleSink in timestamp order.
+     *
+     * Merges the imu, quat_imu, and temps vectors by elapsed_time_ms and
+     * calls the appropriate sink method for each record, allowing any
+     * downstream sink (AHRS, FFT, CSV, etc.) to be exercised against
+     * previously recorded data without touching BLE.
+     *
+     * @param data  Ride data returned by load_ride().
+     * @param sink  Sink to receive the replayed samples.
+     */
+    void replay_ride(const RideData &data, ISampleSink &sink);
+
 } // namespace sf::pipeline
 
 #endif // FILE_SINK_HPP
