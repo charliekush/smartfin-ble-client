@@ -46,5 +46,22 @@ namespace sf::ahrs {
     const Config &AHRS::config() const { return config_; }
     void AHRS::setConfig(const Config &config) { config_ = config; }
     const State &AHRS::state() const { return state_; }
+    math3d::Quaternion AHRS::orientationEarthToImu() const { return state_.q; }
+    math3d::Quaternion AHRS::orientationImuToEarth() const
+    {
+        return math3d::conjugate(state_.q);
+    }
+    math3d::Vec3 AHRS::gyroBiasRadS() const { return state_.gyro_bias_rad_s; }
+    math3d::Vec3 AHRS::zeroGAcceleration() const { return state_.accel_zero_g; }
+    math3d::Vec3 AHRS::globalAcceleration() const { return state_.accel_global; }
+    bool AHRS::initialized() const
+    {
+        return state_.t_s >= config_.t_init_s;
+    }
+
+    Output AHRS::update(const sf::protocol::DecodedImu &imu)
+    {
+        return update(Sample(imu));
+    }
 
 } // namespace sf::ahrs
