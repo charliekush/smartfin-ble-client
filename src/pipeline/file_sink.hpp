@@ -226,6 +226,17 @@ namespace sf::pipeline {
         }
     };
 
+    /**
+     * @brief All decoded records from a single ride file.
+     */
+    struct RideData
+    {
+        std::vector<sf::protocol::DecodedImu> imu;                ///< Raw IMU samples.
+        std::vector<sf::protocol::DecodedQuatImu> quat_imu;       ///< Quaternion IMU samples.
+        std::vector<sf::protocol::DecodedTemp> temps;             ///< Temperature samples.
+        std::optional<sf::protocol::DecodedFwVersion> fw_version; ///< Firmware version, if present.
+    };
+
 } // namespace sf::pipeline
 
 #endif // FILE_SINK_HPP
