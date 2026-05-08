@@ -17,8 +17,7 @@ namespace math3d {
 constexpr double EPSILON = 1e-6f;
 
 /**
- * @brief
- *
+ * @brief Three-component double-precision vector.
  */
 struct Vec3 {
     double x = 0.0f; ///< X component.

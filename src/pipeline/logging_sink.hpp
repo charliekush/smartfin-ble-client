@@ -34,6 +34,10 @@ namespace sf::pipeline {
     class LoggingSink final : public ISampleSink
     {
     public:
+        /**
+         * @brief Print a temperature ensemble to stdout.
+         * @param s  Decoded temperature ensemble.
+         */
         void on_temperature(const sf::protocol::DecodedTemp &s) override
         {
             const uint32_t n = ++temp_count_;
@@ -45,6 +49,10 @@ namespace sf::pipeline {
             std::fflush(stdout);
         }
 
+        /**
+         * @brief Print a raw IMU ensemble to stdout
+         * @param s  Decoded IMU ensemble
+         */
         void on_imu(const sf::protocol::DecodedImu &s) override
         {
             const uint32_t n = ++imu_count_;
@@ -63,6 +71,10 @@ namespace sf::pipeline {
             std::fflush(stdout);
         }
 
+        /**
+         * @brief Print a firmware version ensemble to stdout
+         * @param s  Decoded firmware version ensemble
+         */
         void on_fw_version(const sf::protocol::DecodedFwVersion &s) override
         {
             std::printf("[FWVER      ]  t=%7.1f s  version=%s\n",
@@ -71,11 +83,15 @@ namespace sf::pipeline {
             std::fflush(stdout);
         }
 
+        /// @brief Number of temperature ensembles received since construction
         uint32_t temp_count() const { return temp_count_.load(); }
+        /// @brief Number of IMU ensembles received since construction
         uint32_t imu_count() const { return imu_count_.load(); }
 
     private:
+        /// Running count of temperature ensembles
         std::atomic<uint32_t> temp_count_{0};
+        /// Running count of IMU ensembles
         std::atomic<uint32_t> imu_count_{0};
     };
 

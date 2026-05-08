@@ -14,6 +14,9 @@
 
 namespace sf::protocol {
 
+    /**
+     * @brief Ensemble type identifiers as defined in the firmware wire protocol.
+     */
     enum class EnsembleId : uint8_t
     {
         Temp = 0x01,            ///< temperature only
@@ -44,6 +47,13 @@ struct DecodedImu {
     float gyro_dps[3];        ///< Angular rate in deg/s [x, y, z].
     float mag_uT[3];          ///< Magnetic field in uT [x, y, z].
 };
+/**
+ * @brief Decoded payload for ENS_QUAT_HIGH_DATA_RATE_IMU (0x0D).
+ *
+ * Extends DecodedImu with a unit quaternion fused on the device and a
+ * heading accuracy estimate. Q30 fixed-point wire values are scaled to
+ * [-1, 1] on decode; q0 is reconstructed from q1/q2/q3.
+ */
 struct DecodedQuatImu
 {
     uint32_t elapsed_time_ms; ///< Milliseconds since session start.
@@ -51,9 +61,9 @@ struct DecodedQuatImu
     float gyro_dps[3];        ///< Angular rate in deg/s [x, y, z].
     float mag_uT[3];          ///< Magnetic field in uT [x, y, z].
 
-    float q[4]; ///< [q0, q1, q2, q3] — full quaternion
-    float heading_accuracy_deg;
-    bool quat_valid; ///< false if accuracy > threshold
+    float q[4];                  ///< Unit quaternion [q0, q1, q2, q3].
+    float heading_accuracy_deg;  ///< Estimated heading accuracy in degrees.
+    bool  quat_valid;            ///< False when accuracy exceeds the validity threshold.
 };
 
 /**
@@ -63,10 +73,11 @@ struct DecodedQuatImu
  * Format: "FW<major>.<minor>.<build><branch>", max 32 chars.
  */
 struct DecodedFwVersion {
-    uint32_t elapsed_time_ms;
+    uint32_t elapsed_time_ms;        ///< Milliseconds since session start.
     char     version[33]; ///< Null-terminated version string, max 32 wire chars.
 };
 
+/// @brief Variant holding any single decoded ensemble from the wire protocol.
 using DecodedEnsemble = std::variant<
     DecodedTemp,
     DecodedImu,
