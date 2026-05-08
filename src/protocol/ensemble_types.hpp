@@ -67,7 +67,12 @@ struct DecodedFwVersion {
     char     version[33]; ///< Null-terminated version string, max 32 wire chars.
 };
 
-using DecodedEnsemble = std::variant<DecodedTemp, DecodedImu, DecodedFwVersion>;
+using DecodedEnsemble = std::variant<
+    DecodedTemp,
+    DecodedImu,
+    DecodedQuatImu,
+    DecodedFwVersion
+>;
 
 } // namespace sf::protocol
 
