@@ -12,6 +12,7 @@
 #include "sample_sink.hpp"
 #include "protocol/ensemble_types.hpp"
 
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -58,6 +59,14 @@ public:
     }
 
     /**
+     * @brief Store the firmware version string (last received wins).
+     * @param s  Decoded firmware version ensemble.
+     */
+    void on_fw_version(const sf::protocol::DecodedFwVersion& s) override {
+        fw_version_ = s;
+    }
+
+    /**
      * @brief Read-only view of all accumulated temperature samples.
      * @return Span over the internal temperature vector.
      */
@@ -74,16 +83,25 @@ public:
     }
 
     /**
+     * @brief Return the firmware version if one was received this session.
+     */
+    const std::optional<sf::protocol::DecodedFwVersion>& fw_version() const {
+        return fw_version_;
+    }
+
+    /**
      * @brief Discard all buffered samples.
      */
     void clear() {
         temps_.clear();
         imu_.clear();
+        fw_version_.reset();
     }
 
 private:
-    std::vector<sf::protocol::DecodedTemp> temps_; ///< Accumulated temperature samples.
-    std::vector<sf::protocol::DecodedImu>  imu_;   ///< Accumulated IMU samples.
+    std::vector<sf::protocol::DecodedTemp>              temps_;      ///< Accumulated temperature samples.
+    std::vector<sf::protocol::DecodedImu>               imu_;        ///< Accumulated IMU samples.
+    std::optional<sf::protocol::DecodedFwVersion>       fw_version_; ///< Most recent firmware version, if received.
 };
 
 } // namespace sf::pipeline

@@ -24,7 +24,7 @@ enum class EnsembleId : uint8_t {
  * @brief Decoded payload for ENS_TEMP (0x01), Ensemble01_data_t.
  */
 struct DecodedTemp {
-    uint32_t elapsed_time_ds; ///< Deciseconds since session start.
+    uint32_t elapsed_time_ms; ///< Milliseconds since session start.
     float    temp_c;          ///< Water temperature in degrees Celsius.
     bool     in_water;        ///< True when the fin detects water immersion.
 };
@@ -33,12 +33,12 @@ struct DecodedTemp {
  * @brief Decoded payload for ENS_TEMP_HIGH_DATA_RATE_IMU (0x0C), Ensemble12_data_t.
  *
  * Fixed-point wire values are scaled to physical units on decode:
- * Q14 → m/s^2, Q7 → deg/s, Q3 → uT.
+ * Q14 -> m/s^2, Q7 -> deg/s, Q3 -> uT.
  */
 struct DecodedImu {
-    uint32_t elapsed_time_ds; ///< Deciseconds since session start.
+    uint32_t elapsed_time_ms; ///< Milliseconds since session start.
     float accel_ms2[3];       ///< Linear acceleration in m/s^2 [x, y, z].
-    float    gyro_dps[3];     ///< Angular rate in deg/s [x, y, z].
+    float gyro_dps[3];        ///< Angular rate in deg/s [x, y, z].
     float mag_uT[3];          ///< Magnetic field in uT [x, y, z].
 };
 
@@ -49,7 +49,7 @@ struct DecodedImu {
  * Format: "FW<major>.<minor>.<build><branch>", max 32 chars.
  */
 struct DecodedFwVersion {
-    uint32_t elapsed_time_ds;
+    uint32_t elapsed_time_ms;
     char     version[33]; ///< Null-terminated version string, max 32 wire chars.
 };
 

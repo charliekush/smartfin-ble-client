@@ -21,7 +21,7 @@ static constexpr size_t TRANSPORT_HEADER_SIZE = 6;
 /**
  * @brief Size in bytes of the packed ensemble header.
  */
-static constexpr size_t ENSEMBLE_HEADER_SIZE = 3;
+static constexpr size_t ENSEMBLE_HEADER_SIZE = 4;
 
 static constexpr size_t TEMP_PAYLOAD_SIZE = 3;  ///< ENS_TEMP (0x01): int16 + uint8
 static constexpr size_t IMU_PAYLOAD_SIZE  = 18; ///< ENS_TEMP_HIGH_DATA_RATE_IMU (0x0C): 3×int16 accel + 3×int16 gyro + 3×int16 mag
@@ -51,16 +51,14 @@ static inline int32_t read_i32_le(const uint8_t* p) {
  * @brief Parse the packed ensemble header fields.
  * @param p Pointer to the first header byte.
  * @param ens_type Output ensemble type identifier.
- * @param elapsed_ds Output elapsed time in deciseconds.
+ * @param elapsed_ms Output elapsed time in milliseconds.
  */
 static void parse_ensemble_header(const uint8_t* p,
                                   uint8_t& ens_type,
-                                  uint32_t& elapsed_ds) {
-    uint32_t word = static_cast<uint32_t>(p[0])
-                  | (static_cast<uint32_t>(p[1]) << 8)
-                  | (static_cast<uint32_t>(p[2]) << 16);
+                                  uint32_t& elapsed_ms) {
+    uint32_t word = read_u32_le(p);
     ens_type   = static_cast<uint8_t>(word & 0x0Fu);
-    elapsed_ds = (word >> 4) & 0x000FFFFFu;
+    elapsed_ms = (word >> 4) & 0x0FFFFFFFu;
 }
 
 bool decode_packet(std::span<const uint8_t> packet,
@@ -81,8 +79,8 @@ bool decode_packet(std::span<const uint8_t> packet,
 
     while (offset + ENSEMBLE_HEADER_SIZE <= end) {
         uint8_t  ens_type;
-        uint32_t elapsed_ds;
-        parse_ensemble_header(packet.data() + offset, ens_type, elapsed_ds);
+        uint32_t elapsed_ms;
+        parse_ensemble_header(packet.data() + offset, ens_type, elapsed_ms);
 
         if (ens_type == static_cast<uint8_t>(EnsembleId::Temp)) {
             const size_t record_size = ENSEMBLE_HEADER_SIZE + TEMP_PAYLOAD_SIZE;
@@ -93,7 +91,7 @@ bool decode_packet(std::span<const uint8_t> packet,
             const bool     in_water    = payload[2] != 0;
 
             out.push_back(DecodedTemp{
-                .elapsed_time_ds = elapsed_ds,
+                .elapsed_time_ms = elapsed_ms,
                 .temp_c          = scaled_temp / 128.0f,
                 .in_water        = in_water,
             });
@@ -110,7 +108,7 @@ bool decode_packet(std::span<const uint8_t> packet,
             const uint8_t* payload = packet.data() + offset + ENSEMBLE_HEADER_SIZE;
 
             DecodedImu imu{};
-            imu.elapsed_time_ds = elapsed_ds;
+            imu.elapsed_time_ms = elapsed_ms;
 
             for (int i = 0; i < 3; ++i) {
                 imu.accel_ms2[i] = read_i16_le(payload + i * 2)       / 16384.0f;
@@ -133,7 +131,7 @@ bool decode_packet(std::span<const uint8_t> packet,
             if (offset + min_record + nchars > end) break;
 
             DecodedFwVersion fwv{};
-            fwv.elapsed_time_ds = elapsed_ds;
+            fwv.elapsed_time_ms = elapsed_ms;
             std::memcpy(fwv.version, payload + TEXT_NCHARS_SIZE, nchars);
             fwv.version[nchars] = '\0';
 

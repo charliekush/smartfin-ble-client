@@ -43,7 +43,7 @@ struct SessionStats {
 };
 
 /**
- * @brief Orchestrates one BLE session: scan → connect → subscribe → decode → sink.
+ * @brief Orchestrates one BLE session: scan -> connect -> subscribe -> decode -> sink.
  *
  * @par Threading model
  * The BLE stack delivers notification callbacks on its own internal thread.
