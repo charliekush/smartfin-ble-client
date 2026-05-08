@@ -26,37 +26,53 @@ using CFG::Scalar;
  * lab-tested baseline.
  */
 struct Config {
-    Scalar K_normal = 0.5;  ///< Normal feedback gain (~1/s).
-    Scalar K_init   = 10.0; ///< Startup feedback gain (~1/s).
-    Scalar t_init_s = 3.0;  ///< Startup ramp duration in seconds.
+    /// Normal feedback gain (~1/s).
+    Scalar K_normal = 0.5;
+    /// Startup feedback gain (~1/s).
+    Scalar K_init = 10.0;
+    /// Startup ramp duration in seconds.
+    Scalar t_init_s = 3.0;
 
-    Scalar gyro_bias_fc_hz      = 0.05;               ///< Gyro bias estimator corner frequency.
-    Scalar gyro_min_rad_s       = 4.0 * DEG_TO_RAD;  ///< Stationary gyro threshold.
-    Scalar gyro_stationary_time_s = 2.0;              ///< Time before bias estimator enables.
+    /// Gyro bias estimator corner frequency.
+    Scalar gyro_bias_fc_hz = 0.05;
+    /// Stationary gyro threshold.
+    Scalar gyro_min_rad_s = 4.0 * DEG_TO_RAD;
+    /// Time before bias estimator enables.
+    Scalar gyro_stationary_time_s = 2.0;
 
-    Scalar mag_min_uT = 22.0; ///< Minimum valid Earth field magnitude.
-    Scalar mag_max_uT = 67.0; ///< Maximum valid Earth field magnitude.
+    /// Minimum valid Earth field magnitude.
+    Scalar mag_min_uT = 22.0;
+    /// Maximum valid Earth field magnitude.
+    Scalar mag_max_uT = 67.0;
 
-    Scalar accel_reject_threshold_g = 0.1;   ///< Allowed accel deviation from 1 g.
-    Scalar accel_reject_time_s      = 0.100; ///< Time before accel is rejected.
+    /// Allowed accel deviation from 1 g.
+    Scalar accel_reject_threshold_g = 0.1;
+    /// Time before accel is rejected.
+    Scalar accel_reject_time_s = 0.100;
 
-    Scalar max_dt_s = 0.250; ///< Samples with a larger timestep are rejected.
+    /// Samples with a larger timestep are rejected.
+    Scalar max_dt_s = 0.250;
 };
 
 /**
  * @brief One IMU sample converted to AHRS units.
  *
  * Constructed from a @c DecodedImu by converting:
- *   - gyro:  deg/s  → rad/s
- *   - accel: m/s²   → g
- *   - mag:   µT     → µT (no change)
+ *   - gyro:  deg/s  -> rad/s
+ *   - accel: m/s^2  -> g
+ *   - mag:   uT     -> uT (no change)
  */
 struct Sample {
-    std::uint32_t elapsed_time_ms = 0; ///< Wire timestamp (28-bit ms field).
-    double        time_s          = 0; ///< @c elapsed_time_ms in seconds.
-    math3d::Vec3  gyro_rad_s{};        ///< Angular rate in rad/s.
-    math3d::Vec3  accel_g{};           ///< Linear acceleration in g.
-    math3d::Vec3  mag_uT{};            ///< Magnetic field in µT.
+    /// Wire timestamp (28-bit ms field).
+    std::uint32_t elapsed_time_ms = 0;
+    /// @c elapsed_time_ms in seconds.
+    double time_s = 0;
+    /// Angular rate in rad/s.
+    math3d::Vec3 gyro_rad_s{};
+    /// Linear acceleration in g.
+    math3d::Vec3 accel_g{};
+    /// Magnetic field in uT.
+    math3d::Vec3 mag_uT{};
 
     explicit Sample(const sf::protocol::DecodedImu& imu);
 };
@@ -65,41 +81,63 @@ struct Sample {
  * @brief Persistent filter state carried between updates.
  */
 struct State {
-    math3d::Quaternion q = math3d::Quaternion::identity(); ///< Earth-relative-to-IMU orientation.
+    /// Earth-relative-to-IMU orientation.
+    math3d::Quaternion q = math3d::Quaternion::identity();
 
-    math3d::Vec3 gyro_bias_rad_s{}; ///< Estimated gyro bias in rad/s.
+    /// Estimated gyro bias in rad/s.
+    /// @todo Seed with lab-calibrated value; use AHRS::reset(Vec3) to apply.
+    math3d::Vec3 gyro_bias_rad_s{};
 
-    Scalar stationary_time_s = 0.0; ///< Continuous time below gyro threshold.
-    Scalar bad_accel_time_s  = 0.0; ///< Continuous time with invalid accel.
-    Scalar t_s               = 0.0; ///< Time since AHRS initialization.
+    /// Continuous time below gyro threshold.
+    Scalar stationary_time_s = 0.0;
+    /// Continuous time with invalid accel.
+    Scalar bad_accel_time_s = 0.0;
+    /// Time since AHRS initialization.
+    Scalar t_s = 0.0;
 
-    std::uint32_t previous_time_ms = 0;    ///< Timestamp of the previous sample.
-    bool          have_previous    = false; ///< True after first sample is processed.
+    /// Timestamp of the previous sample.
+    std::uint32_t previous_time_ms = 0;
+    /// True after first sample is processed.
+    bool have_previous = false;
 
-    math3d::Vec3 accel_zero_g{};  ///< Gravity-removed accel, body frame.
-    math3d::Vec3 accel_global{};  ///< Gravity-removed accel, ENU frame.
+    /// Gravity-removed accel, body frame.
+    math3d::Vec3 accel_zero_g{};
+    /// Gravity-removed accel, ENU frame.
+    math3d::Vec3 accel_global{};
 };
 
 /**
  * @brief Output snapshot produced by one AHRS update.
  */
 struct Output {
-    bool updated = false; ///< False if the sample was skipped.
+    /// False if the sample was skipped.
+    bool updated = false;
 
-    Scalar dt_s = 0.0; ///< Timestep used for this update.
-    Scalar t_s  = 0.0; ///< Filter time after this update.
+    /// Timestep used for this update.
+    Scalar dt_s = 0.0;
+    /// Filter time after this update.
+    Scalar t_s = 0.0;
 
-    math3d::Quaternion q{};            ///< Earth-relative-to-IMU orientation.
-    math3d::Quaternion imu_to_earth{}; ///< IMU-relative-to-Earth orientation.
+    /// Earth-relative-to-IMU orientation.
+    math3d::Quaternion q{};
+    /// IMU-relative-to-Earth orientation.
+    math3d::Quaternion imu_to_earth{};
 
-    math3d::Vec3 gyro_bias_rad_s{}; ///< Estimated gyro bias.
-    math3d::Vec3 accel_zero_g{};    ///< Body-frame zero-g acceleration.
-    math3d::Vec3 accel_global{};    ///< ENU-frame zero-g acceleration.
+    /// Estimated gyro bias.
+    math3d::Vec3 gyro_bias_rad_s{};
+    /// Body-frame zero-g acceleration.
+    math3d::Vec3 accel_zero_g{};
+    /// ENU-frame zero-g acceleration.
+    math3d::Vec3 accel_global{};
 
-    bool initialized       = false; ///< True after startup ramp completes.
-    bool accel_used        = false; ///< True if accel contributed feedback.
-    bool mag_used          = false; ///< True if mag contributed feedback.
-    bool gyro_bias_updated = false; ///< True if stationary bias update ran.
+    /// True after startup ramp completes.
+    bool initialized = false;
+    /// True if accel contributed feedback.
+    bool accel_used = false;
+    /// True if mag contributed feedback.
+    bool mag_used = false;
+    /// True if stationary bias update ran.
+    bool gyro_bias_updated = false;
 };
 
 } // namespace sf::ahrs
