@@ -44,10 +44,20 @@ namespace sf::pipeline {
         virtual void on_temperature(const sf::protocol::DecodedTemp &sample) = 0;
 
         /**
-         * @brief Called once per decoded IMU ensemble.
+         * @brief Called once per decoded raw IMU ensemble.
          * @param sample  Decoded accel, gyro, and magnetometer vectors.
          */
         virtual void on_imu(const sf::protocol::DecodedImu &sample) = 0;
+
+        /**
+         * @brief Called once per decoded quaternion IMU ensemble.
+         *
+         * Override when the device streams pre-fused quaternions.
+         * Default no-op so existing sinks need not change.
+         * @param sample  Decoded IMU vectors plus on-device quaternion.
+         */
+        virtual void on_quat_imu(
+            const sf::protocol::DecodedQuatImu& /*sample*/) {}
 
         /**
          * @brief Called once when a firmware version ensemble is received.

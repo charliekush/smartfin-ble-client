@@ -29,6 +29,7 @@ namespace sf::ahrs {
  */
 class AHRS {
 public:
+    /// @brief Construct a filter with default configuration.
     AHRS() = default;
 
     explicit AHRS(const Config& config);
@@ -92,18 +93,78 @@ public:
     bool initialized() const;
 
 private:
-    Config config_{};
-    State  state_{};
+    Config config_{}; ///< Active filter tuning parameters.
+    State  state_{};  ///< Persistent state carried between updates.
 
+    /// @brief Return the feedback gain for the current filter time.
     Scalar computeGain() const;
 
-    math3d::Vec3 updateGyroBias(math3d::Vec3 gyro_rad_s, Scalar dt_s, bool& bias_updated);
-    math3d::Vec3 rejectMagneticDistortion(math3d::Vec3 mag_uT, bool& mag_used) const;
-    math3d::Vec3 rejectLinearAcceleration(math3d::Vec3 accel_g, Scalar dt_s, bool& accel_used);
-    math3d::Vec3 computeAccelError(math3d::Quaternion q_hat, math3d::Vec3 accel_used_g) const;
-    math3d::Vec3 computeMagError(math3d::Quaternion q_hat, math3d::Vec3 accel_used_g, math3d::Vec3 mag_used_uT) const;
-    void         integrateQuaternion(math3d::Quaternion q_hat, math3d::Vec3 corrected_rate_rad_s, Scalar dt_s);
-    void         updateAccelerations(math3d::Vec3 raw_accel_g);
+    /**
+     * @brief Update the gyro bias estimate when the sensor is stationary.
+     * @param gyro_rad_s  Raw gyro reading in rad/s.
+     * @param dt_s        Timestep in seconds.
+     * @param bias_updated  Set to true if the bias was updated this step.
+     * @return Bias-corrected gyro rate in rad/s.
+     */
+    math3d::Vec3 updateGyroBias(math3d::Vec3 gyro_rad_s,
+                                Scalar dt_s,
+                                bool& bias_updated);
+
+    /**
+     * @brief Reject magnetometer readings outside the valid field range.
+     * @param mag_uT    Raw magnetometer reading in uT.
+     * @param mag_used  Set to true when the reading passes validation.
+     * @return Validated (or zeroed) magnetometer vector.
+     */
+    math3d::Vec3 rejectMagneticDistortion(math3d::Vec3 mag_uT,
+                                          bool& mag_used) const;
+
+    /**
+     * @brief Reject accelerometer readings that indicate linear acceleration.
+     * @param accel_g     Raw accelerometer in g.
+     * @param dt_s        Timestep in seconds.
+     * @param accel_used  Set to true when the reading is accepted.
+     * @return Accepted (or zeroed) accelerometer vector.
+     */
+    math3d::Vec3 rejectLinearAcceleration(math3d::Vec3 accel_g,
+                                          Scalar dt_s,
+                                          bool& accel_used);
+
+    /**
+     * @brief Compute the gradient-descent error term from the accelerometer.
+     * @param q_hat        Current orientation estimate.
+     * @param accel_used_g Validated accelerometer reading in g.
+     * @return Error vector in body frame.
+     */
+    math3d::Vec3 computeAccelError(math3d::Quaternion q_hat,
+                                   math3d::Vec3 accel_used_g) const;
+
+    /**
+     * @brief Compute the gradient-descent error term from the magnetometer.
+     * @param q_hat       Current orientation estimate.
+     * @param accel_used_g Validated accelerometer reading in g.
+     * @param mag_used_uT  Validated magnetometer reading in uT.
+     * @return Error vector in body frame.
+     */
+    math3d::Vec3 computeMagError(math3d::Quaternion q_hat,
+                                 math3d::Vec3 accel_used_g,
+                                 math3d::Vec3 mag_used_uT) const;
+
+    /**
+     * @brief Integrate the corrected angular rate into the orientation quaternion.
+     * @param q_hat                  Current orientation estimate.
+     * @param corrected_rate_rad_s   Bias-corrected, feedback-adjusted rate.
+     * @param dt_s                   Timestep in seconds.
+     */
+    void integrateQuaternion(math3d::Quaternion q_hat,
+                             math3d::Vec3 corrected_rate_rad_s,
+                             Scalar dt_s);
+
+    /**
+     * @brief Remove estimated gravity and rotate acceleration to world frame.
+     * @param raw_accel_g  Raw accelerometer reading in g.
+     */
+    void updateAccelerations(math3d::Vec3 raw_accel_g);
 };
 
 } // namespace sf::ahrs
