@@ -22,7 +22,7 @@ if(SMARTFIN_ENABLE_SIMPLEBLE)
     add_subdirectory(external/SimpleBLE/simpleble)
 endif()
 
-# ── Protocol layer ────────────────────────────────────────────────────────────
+#  Protocol layer 
 # Pure C++20, no platform or BLE dependencies.
 # Apple clients (watchOS/iOS) can link this without SimpleBLE.
 add_library(smartfin_protocol STATIC
@@ -56,7 +56,18 @@ target_link_libraries(smartfin_ahrs PUBLIC
 )
 target_compile_features(smartfin_ahrs PUBLIC cxx_std_20)
 
-# ── Session layer ─────────────────────────────────────────────────────────────
+#  Pipeline layer 
+# ISampleSink implementations (FileSink, etc). Header-only sinks (BufferSink,
+# LoggingSink) need no compilation unit; FileSink does.
+add_library(smartfin_pipeline STATIC
+    src/pipeline/file_sink.cpp
+)
+target_include_directories(smartfin_pipeline PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(smartfin_pipeline PUBLIC smartfin_protocol)
+
+#  Session layer 
 # Depends on protocol; transport adapter is injected at runtime via IBleAdapter.
 add_library(smartfin_session STATIC
     src/session/session.cpp
@@ -66,7 +77,7 @@ target_include_directories(smartfin_session PUBLIC
 )
 target_link_libraries(smartfin_session PUBLIC smartfin_protocol)
 
-# ── SimpleBLE transport adapter (optional) ────────────────────────────────────
+#  SimpleBLE transport adapter (optional) 
 if(SMARTFIN_ENABLE_SIMPLEBLE)
     add_library(smartfin_transport STATIC
         src/transport/simpleble_adapter.cpp
@@ -80,7 +91,7 @@ if(SMARTFIN_ENABLE_SIMPLEBLE)
     )
 endif()
 
-# ── Receiver executable ───────────────────────────────────────────────────────
+#  Receiver executable 
 add_executable(ble_receiver
     src/receiver/receiver.cpp
 )
@@ -98,7 +109,7 @@ if(SMARTFIN_ENABLE_SIMPLEBLE)
     target_link_libraries(ble_receiver PRIVATE smartfin_transport)
 endif()
 
-# ── BLE logger (interactive test tool) ───────────────────────────────────────
+#  BLE logger (interactive test tool) 
 # Streams ensembles from the fin and prints each one to stdout in real time.
 # Usage: ./ble_logger   (Ctrl-C to stop)
 if(SMARTFIN_ENABLE_SIMPLEBLE)
@@ -109,6 +120,22 @@ if(SMARTFIN_ENABLE_SIMPLEBLE)
         ${CMAKE_CURRENT_SOURCE_DIR}/src
     )
     target_link_libraries(ble_logger PRIVATE
+        smartfin_protocol
+        smartfin_session
+        smartfin_transport
+    )
+endif()
+
+#  Ride recorder (writes binary .sfdat session file) 
+if(SMARTFIN_ENABLE_SIMPLEBLE)
+    add_executable(ride_recorder
+        tools/ride_recorder.cpp
+    )
+    target_include_directories(ride_recorder PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    target_link_libraries(ride_recorder PRIVATE
+        smartfin_pipeline
         smartfin_protocol
         smartfin_session
         smartfin_transport
