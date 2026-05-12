@@ -21,9 +21,9 @@
 namespace sf::pipeline {
 
     /// @brief Magic number at the start of every .sfdat file ("SFDAT").
-    static constexpr uint32_t RIDE_FILE_MAGIC = 0x5346444154u;
+    static constexpr uint64_t RIDE_FILE_MAGIC = 0x5346444154u;
     /// @brief Current file format version; bumped on breaking layout changes.
-    static constexpr uint16_t RIDE_FILE_VERSION = 1;
+    static constexpr uint16_t RIDE_FILE_VERSION = 2;
 
     /**
      * @brief Tag byte prepended to each record to identify its wire type.
@@ -86,7 +86,7 @@ namespace sf::pipeline {
      */
     struct __attribute__((packed)) FileHeader
     {
-        uint32_t magic = RIDE_FILE_MAGIC;        ///< Must equal RIDE_FILE_MAGIC.
+        uint64_t magic = RIDE_FILE_MAGIC;        ///< Must equal RIDE_FILE_MAGIC.
         uint16_t version = RIDE_FILE_VERSION;    ///< Must equal RIDE_FILE_VERSION.
         uint8_t imu_size = sizeof(WireImu);      ///< sizeof(WireImu) at write time.
         uint8_t quat_size = sizeof(WireQuatImu); ///< sizeof(WireQuatImu) at write time.
@@ -202,6 +202,7 @@ namespace sf::pipeline {
      * @param data  Ride data returned by load_ride().
      * @param sink  Sink to receive the replayed samples.
      */
+
     void replay_ride(const RideData &data, ISampleSink &sink);
 
 } // namespace sf::pipeline
