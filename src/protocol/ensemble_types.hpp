@@ -17,7 +17,7 @@ namespace sf::protocol {
     /**
      * @brief Ensemble type identifiers as defined in the firmware wire protocol.
      */
-    enum class EnsembleId : uint8_t
+    enum class EnsembleId : ::std::uint8_t
     {
         Temp = 0x01,            ///< temperature only
         RawHighRateImu = 0x0C,  ///< raw IMU payload
@@ -30,7 +30,7 @@ namespace sf::protocol {
      */
     struct DecodedTemp
     {
-        uint32_t elapsed_time_ms; ///< Milliseconds since session start.
+        ::std::uint32_t elapsed_time_ms; ///< Milliseconds since session start.
         float temp_c;             ///< Water temperature in degrees Celsius.
         bool in_water;            ///< True when the fin detects water immersion.
     };
@@ -42,7 +42,7 @@ namespace sf::protocol {
  * Q14 -> m/s^2, Q7 -> deg/s, Q3 -> uT.
  */
 struct DecodedImu {
-    uint32_t elapsed_time_ms; ///< Milliseconds since session start.
+    ::std::uint32_t elapsed_time_ms; ///< Milliseconds since session start.
     float accel_ms2[3];       ///< Linear acceleration in m/s^2 [x, y, z].
     float gyro_dps[3];        ///< Angular rate in deg/s [x, y, z].
     float mag_uT[3];          ///< Magnetic field in uT [x, y, z].
@@ -56,7 +56,7 @@ struct DecodedImu {
  */
 struct DecodedQuatImu
 {
-    uint32_t elapsed_time_ms; ///< Milliseconds since session start.
+    ::std::uint32_t elapsed_time_ms; ///< Milliseconds since session start.
     float accel_ms2[3];       ///< Linear acceleration in m/s^2 [x, y, z].
     float gyro_dps[3];        ///< Angular rate in deg/s [x, y, z].
     float mag_uT[3];          ///< Magnetic field in uT [x, y, z].
@@ -73,7 +73,7 @@ struct DecodedQuatImu
  * Format: "FW<major>.<minor>.<build><branch>", max 32 chars.
  */
 struct DecodedFwVersion {
-    uint32_t elapsed_time_ms;        ///< Milliseconds since session start.
+    ::std::uint32_t elapsed_time_ms; ///< Milliseconds since session start.
     char     version[33]; ///< Null-terminated version string, max 32 wire chars.
 };
 
