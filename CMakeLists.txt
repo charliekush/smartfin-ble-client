@@ -67,7 +67,23 @@ target_include_directories(smartfin_pipeline PUBLIC
 )
 target_link_libraries(smartfin_pipeline PUBLIC smartfin_protocol)
 
-#  Session layer 
+#  Processing layer
+# Offline processing types: OrientedSample, OrientedRide (Timsort),
+# orient_from_imu (AHRS path), orient_from_quat_imu (DMP path).
+add_library(smartfin_proc STATIC
+    src/proccessing/proc_types.cpp
+)
+target_include_directories(smartfin_proc PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_PROCESSING_DIR}
+)
+target_link_libraries(smartfin_proc PUBLIC
+    smartfin_ahrs
+    smartfin_pipeline
+)
+target_compile_features(smartfin_proc PUBLIC cxx_std_20)
+
+#  Session layer
 # Depends on protocol; transport adapter is injected at runtime via IBleAdapter.
 add_library(smartfin_session STATIC
     src/session/session.cpp
