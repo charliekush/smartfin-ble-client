@@ -4,7 +4,7 @@
  * @brief Records a BLE session to a binary ride file for offline processing.
  *
  * Usage: ./ride_recorder [output.sfdat]
- *   Defaults to ride_<timestamp>.sfdat in the current directory.
+ *   Defaults to unprocessed/ride_<timestamp>.sfdat; directory is created if absent.
  *   Press Ctrl-C to stop early.
  *
  * @date 2026-05-08
@@ -19,7 +19,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <string>
+
+static constexpr const char* UNPROCESSED_DIR = "unprocessed";
 
 static std::string default_filename()
 {
@@ -27,7 +30,8 @@ static std::string default_filename()
     char buf[32];
     std::strftime(buf, sizeof(buf), "ride_%Y%m%d_%H%M%S.sfdat",
                   std::localtime(&now));
-    return buf;
+    std::filesystem::create_directories(UNPROCESSED_DIR);
+    return std::string(UNPROCESSED_DIR) + "/" + buf;
 }
 
 int main(int argc, char* argv[])
