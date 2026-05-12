@@ -44,25 +44,12 @@ namespace sf::proc
                 data.imu);
         std::vector<OrientedSample> quat_imu_samples = orient_from_quat_imu(
             data.quat_imu);
-        samples.reserve(imu_samples.size() + quat_imu_samples.size());
-        
-        std::vector<OrientedSample>::iterator imu_itr = imu_samples.begin();
-        std::vector<OrientedSample>::iterator quat_itr = 
-                                                    quat_imu_samples.begin();
-        while(samples.size() < imu_samples.size() + quat_imu_samples.size())
-        {
-            if(imu_itr == imu_samples.end())
-                samples.insert(samples.end(), quat_itr, quat_imu_samples.end());
-            else if(imu_itr == imu_samples.end())
-                samples.insert(samples.end(), quat_itr, quat_imu_samples.end());
-            else
-            {
-                if ((*imu_itr).elapsed_time_ms < (*quat_itr).elapsed_time_ms)
-                    samples.emplace_back(*imu_itr++);
-                else
-                    samples.emplace_back(*quat_itr++);
-            }
-        }
+        samples.resize(imu_samples.size() + quat_imu_samples.size());
+        std::merge(
+            imu_samples.begin(), imu_samples.end(),
+            quat_imu_samples.begin(), quat_imu_samples.end(),
+            samples.begin(),
+            by_time);
     }
 
     std::vector<OrientedSample> OrientedRide::orient_from_imu(
