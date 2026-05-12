@@ -9,7 +9,6 @@
 
 #include "protocol/ensemble_types.hpp"
 #include "proccessing/math/lin_alg.hpp"
-#include "pipeline/file_sink.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -33,38 +32,12 @@ struct OrientedSample {
 };
 
 /**
- * @brief A time-series of OrientedSamples from a single ride.
+ * @brief A time-sorted sequence of OrientedSamples from a single ride.
+ *
+ * Plain data holder — produced by @c Processor::process().
  */
 struct OrientedRide {
     std::vector<OrientedSample> samples;
-    /// build an OrientedRide from decoded IMU values
-    explicit OrientedRide(sf::pipeline::RideData &data);
-
-    private:
-
-        /**
-         * @brief Run the Madgwick AHRS on RideData::imu and return an OrientedRide.
-         *
-         * Processes each DecodedImu sample through a fresh AHRS filter. Samples
-         * skipped by the filter on its first step (no valid dt yet) are omitted.
-         *
-         * @param data  Ride data loaded from a .sfdat file.
-         * @return OrientedRide with one sample per accepted AHRS update.
-         */
-        std::vector<OrientedSample> orient_from_imu(
-            const std::vector<sf::protocol::DecodedImu> &decoded_samples);
-        /**
-         * @brief Build an OrientedRide from quat_imu using DMP quaternions
-         *
-         * @param data  Ride data loaded from a .sfdat file.
-         * @return OrientedRide with one sample per quat_imu record.
-         */
-        std::vector<OrientedSample> orient_from_quat_imu(
-            const std::vector<sf::protocol::DecodedQuatImu> &decoded_samples);
-
-
-        
-
 };
 
 } // namespace sf::proc
