@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SMARTFIN_PROTOCOL_DIR    ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol)
+set(SMARTFIN_PIPELINE_DIR    ${CMAKE_CURRENT_SOURCE_DIR}/src/pipeline)
 set(SMARTFIN_PROCESSING_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/proccessing)
 set(SMARTFIN_MATH_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/src/proccessing/math)
 
@@ -64,14 +65,17 @@ add_library(smartfin_pipeline STATIC
 )
 target_include_directories(smartfin_pipeline PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_PIPELINE_DIR}
 )
 target_link_libraries(smartfin_pipeline PUBLIC smartfin_protocol)
 
 #  Processing layer
-# Offline processing types: OrientedSample, OrientedRide (Timsort),
-# orient_from_imu (AHRS path), orient_from_quat_imu (DMP path).
+# proc_types: plain data types (OrientedSample, OrientedRide).
+# processor:  pipeline coordinator (sort → orient → merge).
+# sort/timsort.hpp is header-only; no compilation unit required.
 add_library(smartfin_proc STATIC
     src/proccessing/proc_types.cpp
+    src/proccessing/processor.cpp
 )
 target_include_directories(smartfin_proc PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src

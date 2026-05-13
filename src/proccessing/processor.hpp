@@ -47,7 +47,7 @@ public:
     explicit Processor(const ProcessorConfig& cfg);
 
     /**
-     * @brief Run the full pipeline on one ride.
+     * @brief Run the full proccessing pipeline on one ride.
      *
      * Steps performed in order:
      *  1. Sort @c data.imu and @c data.quat_imu by timestamp (timsort).
