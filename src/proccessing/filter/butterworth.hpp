@@ -38,10 +38,8 @@ namespace sf::filter {
      * @param type           Lowpass (default) or Highpass.
      * @return ButterworthCoeffs holding b and a vectors of length order+1.
      */
-    ButterworthCoeffs butterworth(int order,
-                                  double cutoff_hz,
-                                  double sample_rate_hz,
-                                  FilterType type);
+    ButterworthCoeffs butterworth(int order, double cutoff_hz,
+                                  double sample_rate_hz, FilterType type);
 
 } // namespace sf::filter
 

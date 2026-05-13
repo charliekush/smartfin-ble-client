@@ -9,9 +9,7 @@
  *   SciPy: Open Source Scientific Tools for Python. http://www.scipy.org/
  */
 
-
 #include "filter/butterworth.hpp"
-#include <cstdint>
 #include <cmath>
 #include <numbers>
 #include <complex>
