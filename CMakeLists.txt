@@ -35,8 +35,20 @@ target_include_directories(smartfin_protocol PUBLIC
 )
 target_compile_features(smartfin_protocol PUBLIC cxx_std_20)
 
+set_source_files_properties(
+    src/proccessing/math/constants.hpp
+    src/proccessing/math/lin_alg.hpp
+    src/proccessing/math/matrix.hpp
+    src/proccessing/math/matrix.tpp
+    PROPERTIES HEADER_FILE_ONLY TRUE
+)
+
 add_library(smartfin_math STATIC
     src/proccessing/math/lin_alg.cpp
+    src/proccessing/math/constants.hpp
+    src/proccessing/math/lin_alg.hpp
+    src/proccessing/math/matrix.hpp
+    src/proccessing/math/matrix.tpp
 )
 target_include_directories(smartfin_math PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -44,6 +56,16 @@ target_include_directories(smartfin_math PUBLIC
     ${SMARTFIN_MATH_DIR}
 )
 target_compile_features(smartfin_math PUBLIC cxx_std_20)
+
+add_library(smartfin_filter STATIC
+    src/proccessing/filter/butterworth.cpp
+    src/proccessing/filter/filtfilt.cpp
+)
+target_include_directories(smartfin_filter PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_PROCESSING_DIR}
+)
+target_compile_features(smartfin_filter PUBLIC cxx_std_20)
 
 add_library(smartfin_ahrs STATIC
     src/proccessing/AHRS/madgwick_ahrs.cpp
@@ -76,6 +98,7 @@ target_link_libraries(smartfin_pipeline PUBLIC smartfin_protocol)
 add_library(smartfin_proc STATIC
     src/proccessing/proc_types.cpp
     src/proccessing/processor.cpp
+    src/proccessing/orient_ride.cpp
 )
 target_include_directories(smartfin_proc PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
