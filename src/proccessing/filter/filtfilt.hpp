@@ -17,14 +17,13 @@ namespace sf::filter {
  * @brief Apply a zero-phase IIR filter to a signal.
  *
  * Filters the signal forward then backward, cancelling all phase distortion.
- * Requires the complete signal — not suitable for real-time use.
  *
  * @param coeffs  Filter coefficients produced by butterworth().
  * @param signal  Input signal samples.
  * @return        Filtered signal, same length as input.
  */
-std::vector<double> filtfilt(const ButterworthCoeffs& coeffs,
-                             const std::vector<double>& signal);
+std::vector<double> filtfilt(const ButterworthCoeffs &coeffs,
+                             const std::vector<double> &signal);
 
 } // namespace sf::filter
 
