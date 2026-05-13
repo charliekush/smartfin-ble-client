@@ -58,7 +58,7 @@ public:
      * @param data  Ride data loaded from a .sfdat file. Sorted in place.
      * @return      Time-sorted @c OrientedRide.
      */
-    OrientedRide process(sf::pipeline::RideData& data);
+    OrientedRide process(sf::pipeline::RideData &data);
 
 private:
     ProcessorConfig cfg_{};
