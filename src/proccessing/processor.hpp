@@ -26,16 +26,25 @@ struct ProcessorConfig {
 };
 
 /**
+ * @brief Output of the full processing pipeline for one ride.
+ */
+struct ProcessedRide
+{
+    OrientedRide ride; ///< Time-sorted, world-frame oriented samples.
+    // wave metrics, PSD, etc. added here as pipeline stages are implemented
+};
+
+/**
  * @brief Stateful offline processing pipeline.
  *
- * Owns pipeline configuration and converts raw @c RideData into a fully
- * oriented, time-sorted @c OrientedRide. Construct once with a
- * @c ProcessorConfig, then call @c process() for each ride.
+ * Owns pipeline configuration and converts raw @c RideData into a
+ * @c ProcessedRide. Construct once with a @c ProcessorConfig, then call
+ * @c process() for each ride.
  *
  * @par Usage
  * @code
- *   sf::proc::Processor proc;                 // default config
- *   OrientedRide ride = proc.process(data);
+ *   sf::proc::Processor proc;
+ *   ProcessedRide result = proc.process(data);
  * @endcode
  */
 class Processor {
@@ -47,18 +56,22 @@ public:
     explicit Processor(const ProcessorConfig& cfg);
 
     /**
-     * @brief Run the full proccessing pipeline on one ride.
+     * @brief Run the full processing pipeline on one ride.
      *
-     * Steps performed in order:
-     *  1. Sort @c data.imu and @c data.quat_imu by timestamp (timsort).
-     *  2. Convert raw IMU samples to @c OrientedSample via the Madgwick AHRS.
-     *  3. Convert quaternion-IMU samples to @c OrientedSample directly.
-     *  4. Merge both sorted sequences into a single time-sorted result.
+     * Orchestrates orient → filter → welch in order.
      *
      * @param data  Ride data loaded from a .sfdat file. Sorted in place.
+     * @return      Fully processed ride result.
+     */
+    ProcessedRide process(sf::pipeline::RideData &data);
+
+    /**
+     * @brief Sort and orient raw IMU/quat-IMU samples into world frame.
+     *
+     * @param data  Ride data. Sorted in place by timestamp.
      * @return      Time-sorted @c OrientedRide.
      */
-    OrientedRide process(sf::pipeline::RideData &data);
+    OrientedRide orient_ride(sf::pipeline::RideData &data);
 
 private:
     ProcessorConfig cfg_{};
