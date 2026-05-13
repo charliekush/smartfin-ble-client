@@ -4,9 +4,7 @@
  * @brief Butterworth filter coefficient design.
  * @date 2026-05-12
  *
- * @reference SciPy signal.butter / iirfilter:
- *   scipy/signal/_filter_design.py — Jones E, Oliphant E, Peterson P, et al.
- *   SciPy: Open Source Scientific Tools for Python. http://www.scipy.org/
+ * Reference: scipy/signal/_filter_design.py
  */
 
 #include "filter/butterworth.hpp"
@@ -14,11 +12,14 @@
 #include <numbers>
 #include <complex>
 
-
+/**
+ * @brief Compute monic polynomial coefficients from roots.
+ * @param roots  Complex roots.
+ * @return       Coefficients [1, c1, ..., cN] in descending order.
+ */
 static std::vector<std::complex<double>> poly(
     const std::vector<std::complex<double>> &roots)
 {
-                
     std::vector<std::complex<double>> coeffs = {1.0};
     for (auto& root : roots) {
         coeffs.push_back(0.0);
@@ -38,7 +39,7 @@ sf::filter::ButterworthCoeffs sf::filter::butterworth(int order,
     cutoff_hz = cutoff_hz / (sample_rate_hz / 2.0);
     double warped = 4.0 * std::tan(std::numbers::pi * cutoff_hz / 2.0);
 
-    // Analog prototype poles (left half-plane Butterworth)
+    // Analog prototype poles, left half-plane.
     std::vector<std::complex<double>> poles(order);
     for (int k = 0; k < order; ++k)
     {
@@ -47,14 +48,12 @@ sf::filter::ButterworthCoeffs sf::filter::butterworth(int order,
         poles[k] *= warped;
     }
 
-    // Zeros: z = -1 for lowpass (attenuate Nyquist)
-    //        z = +1 for highpass (attenuate DC).
+    // Lowpass zeros at z=-1 (kill Nyquist), highpass at z=+1 (kill DC).
     const std::complex<double> zero_val =
         (type == FilterType::Highpass) ? +1.0 : -1.0;
     std::vector<std::complex<double>> zeros_z(order, zero_val);
 
-    // Bilinear transform  s -> z = (4 + s) / (4 - s).
-    // Accumulate prod(4 - s_k) for gain correction.
+    // Bilinear transform: s -> z = (4+s)/(4-s).
     double transfer_func_gain = std::pow(warped, order);
     std::complex<double> pole_prod = 1.0;
     for (auto &pole : poles)
@@ -64,9 +63,7 @@ sf::filter::ButterworthCoeffs sf::filter::butterworth(int order,
     }
     transfer_func_gain *= std::real(1.0 / pole_prod);
 
-    // Normalise gain at passband edge:
-    //   lowpass  → evaluate at DC      (z = +1)
-    //   highpass → evaluate at Nyquist (z = -1)
+    // Normalize gain: evaluate H(z) at the passband edge.
     const std::complex<double> eval_z =
         (type == FilterType::Highpass) ? -1.0 : +1.0;
 
@@ -83,7 +80,6 @@ sf::filter::ButterworthCoeffs sf::filter::butterworth(int order,
     if (passband_gain > 1e-12)
         transfer_func_gain /= passband_gain;
 
-    // Build b and a polynomial coefficients from zeros and poles.
     auto b_complex = poly(zeros_z);
     auto a_complex = poly(poles);
 
