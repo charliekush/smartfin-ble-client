@@ -11,24 +11,37 @@
 
 namespace sf::filter {
 
-/**
- * @brief IIR filter coefficients in direct-form II transposed (b/a).
- */
-struct ButterworthCoeffs {
-    
-    std::vector<double> b; ///< Numerator polynomial coefficients.
-    std::vector<double> a; ///< Denominator polynomial coefficients.
-};
+    /**
+     * @brief Selects lowpass or highpass filter topology.
+     */
+    enum class FilterType
+    {
+        Lowpass,  ///< Zeros at z = -1 (Nyquist); passes low frequencies.
+        Highpass, ///< Zeros at z = +1 (DC); passes high frequencies.
+    };
 
-/**
- * @brief Design a Butterworth lowpass filter.
- *
- * @param order        Filter order.
- * @param cutoff_hz    -3 dB cutoff frequency in Hz.
- * @param sample_rate_hz  Sample rate of the signal to be filtered in Hz.
- * @return ButterworthCoeffs holding b and a vectors of length order+1.
- */
-ButterworthCoeffs butterworth(int order, double cutoff_hz, double sample_rate_hz);
+    /**
+     * @brief IIR filter coefficients in direct-form II transposed (b/a).
+     */
+    struct ButterworthCoeffs
+    {
+        std::vector<double> b; ///< Numerator polynomial coefficients.
+        std::vector<double> a; ///< Denominator polynomial coefficients.
+    };
+
+    /**
+     * @brief Design a Butterworth lowpass or highpass filter.
+     *
+     * @param order          Filter order.
+     * @param cutoff_hz      -3 dB cutoff frequency in Hz.
+     * @param sample_rate_hz Sample rate of the signal to be filtered in Hz.
+     * @param type           Lowpass (default) or Highpass.
+     * @return ButterworthCoeffs holding b and a vectors of length order+1.
+     */
+    ButterworthCoeffs butterworth(int order,
+                                  double cutoff_hz,
+                                  double sample_rate_hz,
+                                  FilterType type);
 
 } // namespace sf::filter
 
