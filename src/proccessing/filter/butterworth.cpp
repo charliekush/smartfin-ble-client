@@ -11,6 +11,7 @@
 #include <cmath>
 #include <complex>
 #include <numbers>
+#include <stdexcept>
 
 namespace sf::filter {
 
@@ -18,6 +19,17 @@ SosCoeffs butterworth(int order, double cutoff_hz, double sample_rate_hz,
                       FilterType type)
 {
     using namespace std::complex_literals;
+
+    if (order < 1)
+        throw std::invalid_argument("butterworth: order must be >= 1");
+    if (sample_rate_hz <= 0.0)
+        throw std::invalid_argument(
+            "butterworth: sample_rate_hz must be positive");
+    if (cutoff_hz <= 0.0)
+        throw std::invalid_argument("butterworth: cutoff_hz must be positive");
+    if (cutoff_hz >= sample_rate_hz / 2.0)
+        throw std::invalid_argument(
+            "butterworth: cutoff_hz must be below Nyquist");
 
     // Normalize to [0,1] then pre-warp to analog frequency.
     const double wn     = cutoff_hz / (sample_rate_hz / 2.0);
