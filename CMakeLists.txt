@@ -184,3 +184,6 @@ if(SMARTFIN_ENABLE_SIMPLEBLE)
         smartfin_transport
     )
 endif()
+
+enable_testing()
+add_subdirectory(tests)
