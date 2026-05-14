@@ -1,7 +1,7 @@
 /**
  * @file processor.cpp
  * @author Charlie Kushelevsky (charliekushelevsky@gmail.com)
- * @brief Top-level processing pipeline: orient → filter → welch.
+ * @brief Top-level processing pipeline: orient -> filter -> welch.
  * @date 2026-05-12
  */
 

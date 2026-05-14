@@ -95,7 +95,7 @@ void merge_runs(std::vector<T>& v, std::size_t lo, std::size_t mid,
 
     const std::size_t left_len = buf.size();
     while (i < left_len && j <= hi) {
-        // Prefer left on equality → stable.
+        // Prefer left on equality -> stable.
         if (comp(v[j], buf[i]))
             v[k++] = std::move(v[j++]);
         else

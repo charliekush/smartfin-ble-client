@@ -59,7 +59,7 @@ public:
     /**
      * @brief Run the full processing pipeline on one ride.
      *
-     * Orchestrates orient → filter → welch in order.
+     * Orchestrates orient -> filter -> welch in order.
      *
      * @param data  Ride data loaded from a .sfdat file. Sorted in place.
      * @return      Fully processed ride result.
