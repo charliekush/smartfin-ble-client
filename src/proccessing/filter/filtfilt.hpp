@@ -23,7 +23,8 @@ namespace sf::filter {
  * @return        Filtered signal, same length as input.
  */
 std::vector<double> filtfilt(const ButterworthCoeffs &coeffs,
-                             const std::vector<double> &signal);
+                             const std::vector<double> &signal,
+                             size_t irlen = 0);
 
 } // namespace sf::filter
 
