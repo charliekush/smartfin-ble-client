@@ -4,7 +4,7 @@
  * @brief Zero-phase digital filtering via forward + backward IIR passes.
  * @date 2026-05-12
  *
- * @reference SciPy signal.filtfilt (odd-extension padding):
+ * @reference SciPy signal.filtfilt (Gustafsson initial conditions):
  *   scipy/signal/_signaltools.py — Jones E, Oliphant E, Peterson P, et al.
  *   SciPy: Open Source Scientific Tools for Python. http://www.scipy.org/
  */
