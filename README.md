@@ -1,128 +1,164 @@
 # smartfin-ble-client
 
-Shared Smartfin protocol definitions and decoding libraries for BLE telemetry, with optional host-side transport adapters for testing and client development.
+Cross-platform C++ backend for Smartfin telemetry processing. The BLE layer lives on each platform (Swift/CoreBluetooth on Apple, SimpleBLE on desktop); this library handles everything from raw packet bytes to processed, world-frame sensor data.
 
 ## Overview
 
-This repository is the source of truth for the Smartfin host-side telemetry protocol. Its job is to give every consumer the same interpretation of Smartfin telemetry bytes while leaving BLE transport details to the platform that uses them.
+This repository is the shared backend for all Smartfin clients. It decodes BLE telemetry packets, runs the signal processing pipeline (AHRS orientation, Butterworth filtering, zero-phase filtfilt), and exposes results through a pure-C API that any platform can consume.
 
-That separation helps prevent protocol drift between:
+The primary target is Apple Watch. Swift owns the CoreBluetooth BLE layer and hands raw notification bytes into the C bridge. The C++ pipeline runs entirely on-device without any platform-specific code.
+
+This separation prevents protocol drift between:
 
 - firmware in [`smartfin-fw3`](https://github.com/UCSD-E4E/smartfin-fw3)
 - desktop and lab tooling
-- future client applications such as the Apple Watch app
+- the Apple Watch app ([`smartfin-watch`](https://github.com/charliekush/smartfin-watch))
 
 ## What This Repository Owns
 
-- BLE telemetry packet framing
-- ensemble IDs and protocol constants
-- ensemble header parsing
-- binary decoding of ensemble payloads
-- field scaling and unit conversion rules
-- protocol documentation
-- golden test vectors
-- conformance tests
-- optional host-side BLE transport adapters for testing
+- BLE telemetry packet framing, ensemble decoding, and dequantization
+- ensemble IDs, protocol constants, field scaling, and unit conversion
+- AHRS orientation — Madgwick filter (offline) or on-device DMP quaternion (not yet decided)
+- world-frame rotation and gravity subtraction
+- Butterworth bandpass [0.05–0.5 Hz] filter coefficient generation
+- `filtfilt` zero-phase forward-backward filtering with Gustafsson IC (matches SciPy)
+- wave metric pipeline: decimation, Welch PSD, spectral integration, moments, Hs/Tp/Tm01/Tm02 *(planned)*
+- pure-C bridge API for Swift interop (`src/bridge/`)
+- optional host-side SimpleBLE transport adapter for desktop testing
+- GoogleTest unit test suite with SciPy-generated reference vectors
+- GitHub Actions CI
 
 ## What It Does Not Own
 
-- firmware measurement logic
-- embedded BLE stack behavior
-- Apple Watch app UI or lifecycle code
+- firmware measurement logic or embedded BLE stack behavior
+- Apple Watch app UI, lifecycle, or BLE connection management
 - platform-specific presentation models
 
 ## Architecture
 
-The system is split into three layers:
+```
+┌─────────────────────────────────────────────────┐
+│              Platform (Swift / desktop)          │
+│                                                 │
+│  CoreBluetooth (watchOS/iOS)                    │
+│       or SimpleBLE (desktop testing)            │
+└──────────────┬──────────────────────────────────┘
+               │ raw BLE notification bytes
+               ▼
+┌─────────────────────────────────────────────────┐
+│               C Bridge  (src/bridge/)            │
+│                                                 │
+│  sf_sink_push_packet()  →  sf_proc_run()        │
+│  pure-C extern "C" API for Swift interop        │
+└──────────────┬──────────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────────┐
+│            Protocol Layer  (src/protocol/)       │
+│                                                 │
+│  EnsembleDecoder → DecodedImu / DecodedQuatImu  │
+│                    DecodedTemp / DecodedFwVersion│
+└──────────────┬──────────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────────┐
+│          Processing Pipeline  (src/proccessing/) │
+│                                                 │
+│  Madgwick AHRS  →  orient_ride                  │
+│  Butterworth + filtfilt  →  filtered accel      │
+│  Processor::process()  →  ProcessedRide         │
+└──────────────┬──────────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────────┐
+│          Pipeline Sinks  (src/pipeline/)         │
+│                                                 │
+│  FileSink  /  BufferSink  /  LoggingSink        │
+└─────────────────────────────────────────────────┘
+```
 
-1. Protocol
-2. Transport adapters
-3. Client applications and tools
+## Layers
 
-### Protocol layer
+### Protocol (`src/protocol/`)
 
-The protocol layer is shared across all consumers and is responsible for:
+Converts raw BLE notification bytes into structured data. Owns ensemble framing, header parsing, payload decoding, and field scaling. This is the canonical bytes-to-meaning layer — no consumer should reimplement this logic independently.
 
-- decoding BLE transport packet headers
-- iterating packed ensemble records
-- decoding known ensemble payloads
-- applying field scaling and validation
+### Processing (`src/proccessing/`)
 
-This is the canonical bytes-to-meaning layer.
+Stateful offline pipeline that transforms decoded samples into processed ride data:
 
-### Transport adapter layer
+1. **AHRS** — Madgwick filter fuses accelerometer, gyroscope, and magnetometer into an orientation quaternion, correcting gyroscope drift.
+2. **Orient** — rotates raw IMU samples into world frame using the AHRS quaternion output.
+3. **Filter** — Butterworth IIR coefficients + `filtfilt` zero-phase filtering applied to world-frame acceleration axes.
 
-Transport adapters are optional and platform-specific. They are responsible for:
+### C Bridge (`src/bridge/`)
 
-- scanning
-- connecting
-- subscribing to telemetry notifications
-- writing control messages
-- delivering raw bytes to the protocol decoder
+A thin `extern "C"` wrapper over the C++ pipeline, exposing opaque `SF_Sink` and `SF_Proc` handles. Intended for consumption via a Swift bridging header on watchOS/iOS. Usage:
 
-Examples include a `SimpleBLE` adapter for desktop testing and a future native Apple transport built with `CoreBluetooth`.
+```c
+SF_Sink* sink = sf_sink_create();
+SF_Proc* proc = sf_proc_create();
 
-### Application layer
+// For each CoreBluetooth notification:
+sf_sink_push_packet(sink, bytes, length);
 
-Applications and tools consume decoded telemetry and decide how to use it. Examples include logging tools, protocol test harnesses, and client applications.
+// After session ends:
+size_t n = 0;
+SF_OrientedSample* result = sf_proc_run(proc, sink, &n);
+// ... consume result[0..n-1] ...
+sf_oriented_free(result);
 
-## Optional SimpleBLE Support
+sf_proc_destroy(proc);
+sf_sink_destroy(sink);
+```
 
-If this repository includes a `SimpleBLE` backend, it should be treated as:
+### Transport Adapters (`src/transport/`, `src/receiver/`)
 
-- optional
-- host-side only
-- one transport implementation among several possible adapters
+Optional, platform-specific BLE backends. The `SimpleBLE` adapter is for desktop and lab testing only. Apple clients use Swift/CoreBluetooth and never link this layer.
 
-Recommended behavior:
+Enable with:
 
-- protocol code builds independently of `SimpleBLE`
-- `SimpleBLE` support is enabled only when explicitly requested
-- Apple clients can reuse the shared decoder without compiling the desktop transport backend
+```
+SMARTFIN_ENABLE_SIMPLEBLE=1
+```
 
-Example build flag:
+### Pipeline Sinks (`src/pipeline/`)
 
-`SMARTFIN_ENABLE_SIMPLEBLE=1`
+Output targets for the processing pipeline. `FileSink` writes processed data to `.sfdat` files; `BufferSink` accumulates in memory; `LoggingSink` prints samples.
 
-## Apple Platform Guidance
+## Building
 
-For Apple Watch and other Apple clients:
+```bash
+cmake -B build
+cmake --build build
+```
 
-- keep BLE transport logic in Swift using `CoreBluetooth`
-- pass raw notification payloads into the shared Smartfin decoder
-- use a thin C wrapper around the shared decoder if Swift interop is needed
+Run tests:
 
-This keeps protocol logic shared without forcing Apple apps to depend on a desktop-oriented BLE backend.
+```bash
+cd build && ctest
+```
 
-## Language Boundary
+## Testing
 
-The protocol implementation may use C++ internally, but any boundary shared with Swift should expose a small C-compatible API.
+GoogleTest suite covering:
 
-Recommended pattern:
+- Butterworth filter coefficient correctness and filter properties
+- `filtfilt` Gustafsson initial-condition method
+- `filtfilt` zero-phase properties verified against SciPy reference vectors (`tests/filtfilt/gen_filtfilt_vectors.py`)
 
-- C++ for parser implementation
-- a thin `extern "C"` wrapper for stable interop
-- Swift owning Apple BLE transport integration
+CI runs on every push via GitHub Actions.
 
 ## Related Repositories
 
-### `smartfin-fw3`
-
-Owns firmware-side generation of telemetry bytes and embedded behavior.
-
-### `smartfin-watch`
-
-Owns Apple Watch BLE connection logic, app lifecycle, and UI.
-
-### `smartfin-ble-client`
-
-Owns the Smartfin wire format, decoding logic, protocol documentation, test vectors, and optional host-side test transports.
+- [`smartfin-fw3`](https://github.com/UCSD-E4E/smartfin-fw3) — firmware, embedded BLE stack, telemetry byte generation
+- [`smartfin-watch`](https://github.com/charliekush/smartfin-watch) — Apple Watch app, CoreBluetooth, UI, app lifecycle
 
 ## Design Principles
 
-- share protocol logic, not platform assumptions
-- keep transport adapters isolated from decoding logic
+- share processing logic, not platform assumptions
+- BLE transport stays on the platform (Swift or SimpleBLE) — never in this library
+- C bridge boundary stays narrow and stable for Swift interop
 - prefer explicit binary layouts over implicit assumptions
-- use golden test vectors to lock compatibility
-- make optional dependencies truly optional
-- keep Swift interop boundaries narrow and stable
+- lock protocol compatibility with golden test vectors
+- make optional dependencies (SimpleBLE) truly optional
