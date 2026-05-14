@@ -74,6 +74,14 @@ struct Sample {
     /// Magnetic field in uT.
     math3d::Vec3 mag_uT{};
 
+    /**
+     * @brief Construct an AHRS sample by converting a decoded IMU ensemble.
+     *
+     * Converts gyro from deg/s to rad/s, accel from m/s^2 to g, and preserves
+     * mag in uT.
+     *
+     * @param imu  Decoded IMU ensemble from the wire protocol.
+     */
     explicit Sample(const sf::protocol::DecodedImu& imu);
 };
 

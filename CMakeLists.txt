@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SMARTFIN_PROTOCOL_DIR    ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol)
+set(SMARTFIN_PIPELINE_DIR    ${CMAKE_CURRENT_SOURCE_DIR}/src/pipeline)
 set(SMARTFIN_PROCESSING_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src/proccessing)
 set(SMARTFIN_MATH_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/src/proccessing/math)
 
@@ -34,8 +35,20 @@ target_include_directories(smartfin_protocol PUBLIC
 )
 target_compile_features(smartfin_protocol PUBLIC cxx_std_20)
 
+set_source_files_properties(
+    src/proccessing/math/constants.hpp
+    src/proccessing/math/lin_alg.hpp
+    src/proccessing/math/matrix.hpp
+    src/proccessing/math/matrix.tpp
+    PROPERTIES HEADER_FILE_ONLY TRUE
+)
+
 add_library(smartfin_math STATIC
     src/proccessing/math/lin_alg.cpp
+    src/proccessing/math/constants.hpp
+    src/proccessing/math/lin_alg.hpp
+    src/proccessing/math/matrix.hpp
+    src/proccessing/math/matrix.tpp
 )
 target_include_directories(smartfin_math PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -43,6 +56,17 @@ target_include_directories(smartfin_math PUBLIC
     ${SMARTFIN_MATH_DIR}
 )
 target_compile_features(smartfin_math PUBLIC cxx_std_20)
+
+add_library(smartfin_filter STATIC
+    src/proccessing/filter/butterworth.cpp
+    src/proccessing/filter/decimator.cpp
+    src/proccessing/filter/filtfilt.cpp
+)
+target_include_directories(smartfin_filter PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_PROCESSING_DIR}
+)
+target_compile_features(smartfin_filter PUBLIC cxx_std_20)
 
 add_library(smartfin_ahrs STATIC
     src/proccessing/AHRS/madgwick_ahrs.cpp
@@ -64,10 +88,31 @@ add_library(smartfin_pipeline STATIC
 )
 target_include_directories(smartfin_pipeline PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_PIPELINE_DIR}
 )
 target_link_libraries(smartfin_pipeline PUBLIC smartfin_protocol)
 
-#  Session layer 
+#  Processing layer
+# proc_types: plain data types (OrientedSample, OrientedRide).
+# processor:  pipeline coordinator (sort → orient → merge).
+# sort/timsort.hpp is header-only; no compilation unit required.
+add_library(smartfin_proc STATIC
+    src/proccessing/proc_types.cpp
+    src/proccessing/processor.cpp
+    src/proccessing/orient_ride.cpp
+)
+target_include_directories(smartfin_proc PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_PROCESSING_DIR}
+)
+target_link_libraries(smartfin_proc PUBLIC
+    smartfin_ahrs
+    smartfin_filter
+    smartfin_pipeline
+)
+target_compile_features(smartfin_proc PUBLIC cxx_std_20)
+
+#  Session layer
 # Depends on protocol; transport adapter is injected at runtime via IBleAdapter.
 add_library(smartfin_session STATIC
     src/session/session.cpp
@@ -91,22 +136,22 @@ if(SMARTFIN_ENABLE_SIMPLEBLE)
     )
 endif()
 
-#  Receiver executable 
-add_executable(ble_receiver
-    src/receiver/receiver.cpp
-)
-target_include_directories(ble_receiver PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${SMARTFIN_PROTOCOL_DIR}
-    ${SMARTFIN_MATH_DIR}
-)
-target_link_libraries(ble_receiver PRIVATE
-    smartfin_math
-    smartfin_protocol
-    smartfin_session
-)
+#  Receiver executable (SimpleBLE desktop only)
 if(SMARTFIN_ENABLE_SIMPLEBLE)
-    target_link_libraries(ble_receiver PRIVATE smartfin_transport)
+    add_executable(ble_receiver
+        src/receiver/receiver.cpp
+    )
+    target_include_directories(ble_receiver PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${SMARTFIN_PROTOCOL_DIR}
+        ${SMARTFIN_MATH_DIR}
+    )
+    target_link_libraries(ble_receiver PRIVATE
+        smartfin_math
+        smartfin_protocol
+        smartfin_session
+        smartfin_transport
+    )
 endif()
 
 #  BLE logger (interactive test tool) 
@@ -141,3 +186,26 @@ if(SMARTFIN_ENABLE_SIMPLEBLE)
         smartfin_transport
     )
 endif()
+
+#  C bridge (Swift/watchOS entry point — no BLE dependency)
+# Swift imports src/bridge/smartfin_c_api.h via a bridging header and calls
+# into this library directly; CoreBluetooth handles the BLE layer instead.
+option(SMARTFIN_ENABLE_BRIDGE "Build the pure-C Swift bridge library" OFF)
+if(SMARTFIN_ENABLE_BRIDGE)
+    add_library(smartfin_bridge STATIC
+        src/bridge/smartfin_c_api.cpp
+    )
+    target_include_directories(smartfin_bridge PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${SMARTFIN_PROCESSING_DIR}
+    )
+    target_link_libraries(smartfin_bridge PUBLIC
+        smartfin_protocol
+        smartfin_pipeline
+        smartfin_proc
+    )
+    target_compile_features(smartfin_bridge PUBLIC cxx_std_20)
+endif()
+
+enable_testing()
+add_subdirectory(tests)
