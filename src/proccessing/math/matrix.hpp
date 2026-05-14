@@ -40,6 +40,8 @@ template <typename T = double> class Matrix
 
     void set_col(const size_t &col, const std::vector<T> &data);
 
+    std::vector<T> get_col(const size_t &col) const;
+
     void set_row(const size_t &row, const std::vector<T> &data);
     /**
      * @brief Access a mutable matrix element.
@@ -78,6 +80,12 @@ template <typename T = double> class Matrix
      * @return Solution vector `x` such that `A * x = b`.
      */
     std::vector<T> solveLinearSystem(std::vector<T> b);
+
+    /**
+     * @brief Return a copy of this matrix with row order reversed.
+     * @return New matrix whose first row is this matrix's last row, etc.
+     */
+    Matrix<T> flip_rows() const;
 
   private:
     size_t rows_;         ///< Number of rows in the matrix.

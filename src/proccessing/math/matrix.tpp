@@ -74,6 +74,22 @@ template <typename T> size_t Matrix<T>::rows() const
 }
 
 template <typename T>
+std::vector<T> Matrix<T>::get_col(const size_t &col) const
+{
+    if (col >= cols_)
+    {
+        throw std::out_of_range("Matrix column index " + std::to_string(col) +
+                                " out of range for matrix with " +
+                                std::to_string(cols_) + " columns");
+    }
+
+    std::vector<T> result(rows_);
+    for (size_t row = 0; row < rows_; ++row)
+        result[row] = data_[row * cols_ + col];
+    return result;
+}
+
+template <typename T>
 void Matrix<T>::set_col(const size_t &col, const std::vector<T> &data)
 {
     if (col >= cols())
@@ -123,6 +139,21 @@ void Matrix<T>::set_row(const size_t &row, const std::vector<T> &data)
 template <typename T> size_t Matrix<T>::cols() const
 {
     return cols_;
+}
+
+template <typename T> Matrix<T> Matrix<T>::flip_rows() const
+{
+    Matrix<T> result(rows_, cols_);
+
+    for (size_t row = 0; row < rows_; ++row)
+    {
+        for (size_t col = 0; col < cols_; ++col)
+        {
+            result(row, col) = (*this)(rows_ - 1 - row, col);
+        }
+    }
+
+    return result;
 }
 
 template <typename T>
