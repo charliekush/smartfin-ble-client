@@ -59,6 +59,7 @@ target_compile_features(smartfin_math PUBLIC cxx_std_20)
 
 add_library(smartfin_filter STATIC
     src/proccessing/filter/butterworth.cpp
+    src/proccessing/filter/decimator.cpp
     src/proccessing/filter/filtfilt.cpp
 )
 target_include_directories(smartfin_filter PUBLIC
@@ -106,6 +107,7 @@ target_include_directories(smartfin_proc PUBLIC
 )
 target_link_libraries(smartfin_proc PUBLIC
     smartfin_ahrs
+    smartfin_filter
     smartfin_pipeline
 )
 target_compile_features(smartfin_proc PUBLIC cxx_std_20)

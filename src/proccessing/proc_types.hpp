@@ -42,7 +42,7 @@ struct OrientedSample {
 /**
  * @brief A time-sorted sequence of OrientedSamples from a single ride.
  *
- * Plain data holder — produced by @c Processor::process().
+ * Plain data holder - produced by @c Processor::process().
  */
 struct OrientedRide {
     std::vector<OrientedSample> samples;

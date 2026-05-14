@@ -94,11 +94,10 @@ private:
         const std::vector<sf::protocol::DecodedQuatImu>& samples);
 
     /**
-     * @brief Apply filtfilt with @p coeffs to each axis of accel_global.
-     * @param ride    Oriented ride whose samples are filtered in place.
-     * @param coeffs  Butterworth SOS coefficients for the filter pass.
+     * @brief Decimate then apply the configured zero-phase wave bandpass.
+     * @param ride  Oriented ride whose samples are filtered in place.
      */
-    void filter(OrientedRide &ride, const sf::filter::SosCoeffs &coeffs);
+    void filter(OrientedRide &ride);
 };
 
 } // namespace sf::proc

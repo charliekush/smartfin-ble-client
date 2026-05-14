@@ -23,11 +23,11 @@
 namespace {
 
 /**
- * @brief Evaluate the magnitude response |H(e^{jω})| for an SOS cascade.
+ * @brief Evaluate the magnitude response |H(e^{jw})| for an SOS cascade.
  *
  * @param sos   Filter in second-order sections form.
- * @param omega Digital frequency in radians/sample ∈ [0, π].
- * @return      |H(e^{jω})|
+ * @param omega Digital frequency in radians/sample in [0, pi].
+ * @return      |H(e^{jw})|
  */
 double sos_mag_response(const sf::filter::SosCoeffs &sos, double omega)
 {
@@ -51,7 +51,7 @@ double sos_mag_response(const sf::filter::SosCoeffs &sos, double omega)
  *
  * @param freq_hz Frequency in Hz.
  * @param fs      Sample rate in Hz.
- * @return        ω = π · freq_hz / (fs / 2)
+ * @return        w = pi * freq_hz / (fs / 2)
  */
 double omega(double freq_hz, double fs)
 {
@@ -73,7 +73,7 @@ TEST(FiltfiltProperties, OutputLengthMatchesInput)
 // LTI properties
 
 /**
- * @brief filtfilt is linear: filtfilt(α·x1 + β·x2) == α·filtfilt(x1) + β·filtfilt(x2).
+ * @brief filtfilt is linear: filtfilt(alpha*x1 + beta*x2) == alpha*filtfilt(x1) + beta*filtfilt(x2).
  *
  * Uses two sinusoids at different passband frequencies to ensure both
  * components are processed, not simply zeroed by the filter.
@@ -128,7 +128,7 @@ TEST(FiltfiltProperties, ScaleInvariance)
 /**
  * @brief A constant (DC) signal is preserved unchanged by a lowpass filter.
  *
- * The lowpass gain at DC is |H(0)| = 1, so filtfilt gives gain 1² = 1.
+ * The lowpass gain at DC is |H(0)| = 1, so filtfilt gives gain 1^2 = 1.
  * Edge samples are skipped to avoid boundary transients.
  */
 TEST(FiltfiltProperties, DCPassthroughLowpass)
@@ -146,7 +146,7 @@ TEST(FiltfiltProperties, DCPassthroughLowpass)
 /**
  * @brief The output is in phase with the input for a passband sinusoid.
  *
- * Measured via normalized cross-correlation: (x·y)² / (|x|²·|y|²) = 1
+ * Measured via normalized cross-correlation: (x*y)^2 / (|x|^2 * |y|^2) = 1
  * if and only if y is a non-negative scalar multiple of x (zero phase shift).
  * The middle 300 samples of a 500-sample signal are used to avoid edge effects.
  */
@@ -173,11 +173,11 @@ TEST(FiltfiltProperties, ZeroPhase)
 }
 
 /**
- * @brief The effective gain at a passband frequency is |H(ω)|², not |H(ω)|.
+ * @brief The effective gain at a passband frequency is |H(w)|^2, not |H(w)|.
  *
- * A single causal pass gives gain |H(ω)|; the forward + backward passes of
- * filtfilt compound to |H(ω)|².  Gain is measured as the cross-correlation
- * ratio (x·y) / |x|² in the steady-state region.
+ * A single causal pass gives gain |H(w)|; the forward + backward passes of
+ * filtfilt compound to |H(w)|^2.  Gain is measured as the cross-correlation
+ * ratio (x*y) / |x|^2 in the steady-state region.
  */
 TEST(FiltfiltProperties, SquaredMagnitudeResponse)
 {
