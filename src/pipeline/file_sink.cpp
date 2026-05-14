@@ -7,6 +7,7 @@
 
 #include "file_sink.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 
