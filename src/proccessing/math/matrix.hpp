@@ -38,10 +38,25 @@ template <typename T = double> class Matrix
      */
     Matrix(size_t rows, size_t cols, T initial = T{});
 
+    /**
+     * @brief Write a column from a vector of values.
+     * @param col  Zero-based column index.
+     * @param data Values to write; must have exactly @c rows() elements.
+     */
     void set_col(const size_t &col, const std::vector<T> &data);
 
+    /**
+     * @brief Extract a column as a vector.
+     * @param col  Zero-based column index.
+     * @return Vector of @c rows() values from the requested column.
+     */
     std::vector<T> get_col(const size_t &col) const;
 
+    /**
+     * @brief Write a row from a vector of values.
+     * @param row  Zero-based row index.
+     * @param data Values to write; must have exactly @c cols() elements.
+     */
     void set_row(const size_t &row, const std::vector<T> &data);
     /**
      * @brief Access a mutable matrix element.

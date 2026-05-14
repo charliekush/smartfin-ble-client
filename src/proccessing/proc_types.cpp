@@ -10,6 +10,10 @@
 
 namespace sf::proc {
 
+/**
+ * @brief Construct an OrientedSample from a DMP quaternion IMU ensemble.
+ * @param s  Decoded quaternion IMU ensemble.
+ */
 OrientedSample::OrientedSample(const sf::protocol::DecodedQuatImu& s)
     : elapsed_time_ms(s.elapsed_time_ms), q(s.q[0], s.q[1], s.q[2], s.q[3])
 {

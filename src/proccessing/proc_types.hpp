@@ -24,6 +24,14 @@ namespace sf::proc {
 struct OrientedSample {
     OrientedSample() = default;
 
+    /**
+     * @brief Construct an OrientedSample from a DMP quaternion IMU ensemble.
+     *
+     * Uses the on-device fused quaternion to rotate gravity-removed accel into
+     * the world frame without running an additional AHRS filter.
+     *
+     * @param s  Decoded quaternion IMU ensemble.
+     */
     explicit OrientedSample(const sf::protocol::DecodedQuatImu& s);
 
     std::uint32_t      elapsed_time_ms = 0;

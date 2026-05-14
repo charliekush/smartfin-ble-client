@@ -17,9 +17,15 @@
 
 namespace sf::filter {
 
-// Normalize coefficients so a[0]=1 and len(b)==len(a).
-// Equal lengths are required because the direct-form II recurrence indexes
-// b[k] and a[k] in lockstep; trailing zeros are harmless.
+/**
+ * @brief Normalize filter coefficients so a[0]=1 and len(b)==len(a).
+ *
+ * Equal lengths are required because the direct-form II recurrence indexes
+ * b[k] and a[k] in lockstep; trailing zeros are harmless.
+ *
+ * @param coeffs  Raw Butterworth coefficients.
+ * @return        Normalized copy with a[0]=1 and len(b)==len(a).
+ */
 static ButterworthCoeffs format_coeffs(const ButterworthCoeffs& coeffs)
 {
     std::vector<double> b = coeffs.b;
@@ -50,10 +56,15 @@ static ButterworthCoeffs format_coeffs(const ButterworthCoeffs& coeffs)
     return new_coeffs;
 }
 
-// Compute the initial filter state for a unit step input (zi from scipy).
-// The steady-state z satisfies z = A_companion * z + rhs, so we solve
-// (I - A_companion) * z = rhs.  We build the transpose of the companion
-// matrix because the direct-form II state update is row-oriented.
+/**
+ * @brief Compute the initial filter state for a unit-step input (scipy lfilter_zi).
+ *
+ * The steady-state delay vector z satisfies z = A_companion * z + rhs,
+ * so we solve (I - A_companion) * z = rhs using the companion matrix transpose.
+ *
+ * @param coeffs  Normalized filter coefficients (a[0] must be 1).
+ * @return        Initial delay state vector of length len(a) - 1.
+ */
 static std::vector<double> lfilter_zi(const ButterworthCoeffs &coeffs)
 {
     const auto &b = coeffs.b;
@@ -88,6 +99,18 @@ static std::vector<double> lfilter_zi(const ButterworthCoeffs &coeffs)
     return IminusA.solveLinearSystem(state_space_vec);
 }
 
+/**
+ * @brief Apply a direct-form II IIR filter to a 1-D signal.
+ *
+ * Supports both forward (reversed=false) and backward (reversed=true) passes
+ * without physically reversing the output buffer.
+ *
+ * @param coeffs           Normalized filter coefficients.
+ * @param signal           Input signal samples.
+ * @param delasignal_state Delay state; updated in place to the final state.
+ * @param reversed         If true, process samples from last to first.
+ * @return                 Filtered output with the same length as @p signal.
+ */
 static std::vector<double> lfilter(const ButterworthCoeffs &coeffs,
                                    const std::vector<double> &signal,
                                    std::vector<double> &delasignal_state,
@@ -148,7 +171,17 @@ static std::vector<double> lfilter(const ButterworthCoeffs &coeffs,
     return output;
 }
 
-// axis=0: filter each column independently
+/**
+ * @brief Apply a direct-form II IIR filter to each column of a matrix.
+ *
+ * Equivalent to axis=0 filtering: each column is filtered independently with
+ * zero initial conditions.
+ *
+ * @param coeffs   Normalized filter coefficients.
+ * @param input    Input matrix (rows = samples, columns = channels).
+ * @param reversed If true, process each column from last row to first.
+ * @return         Filtered matrix with the same dimensions as @p input.
+ */
 static sf::math::Matrix<double> lfilter(const ButterworthCoeffs &coeffs,
                                         const sf::math::Matrix<double> &input,
                                         bool reversed = false)

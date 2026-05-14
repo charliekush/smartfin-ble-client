@@ -32,6 +32,10 @@ public:
     /// @brief Construct a filter with default configuration.
     AHRS() = default;
 
+    /**
+     * @brief Construct a filter with explicit configuration.
+     * @param config  Tuning parameters to use for this filter instance.
+     */
     explicit AHRS(const Config& config);
 
     /**
@@ -61,35 +65,56 @@ public:
 
     /**
      * @brief Access current filter configuration.
+     * @return Const reference to the active tuning parameters.
      */
     const Config& config() const;
 
     /**
      * @brief Replace filter configuration.
+     * @param config  New tuning parameters to apply.
      */
     void setConfig(const Config& config);
 
     /**
      * @brief Access current persistent state.
+     * @return Const reference to the filter state after the last update.
      */
     const State& state() const;
 
-    /// @brief Earth-relative-to-IMU quaternion.
+    /**
+     * @brief Earth-relative-to-IMU quaternion.
+     * @return Current orientation quaternion q (Earth frame relative to IMU).
+     */
     math3d::Quaternion orientationEarthToImu() const;
 
-    /// @brief IMU-relative-to-Earth quaternion.
+    /**
+     * @brief IMU-relative-to-Earth quaternion.
+     * @return Conjugate of the current orientation quaternion.
+     */
     math3d::Quaternion orientationImuToEarth() const;
 
-    /// @brief Current estimated gyro bias.
+    /**
+     * @brief Current estimated gyro bias.
+     * @return Gyro bias estimate in rad/s.
+     */
     math3d::Vec3 gyroBiasRadS() const;
 
-    /// @brief Body-frame zero-g acceleration.
+    /**
+     * @brief Body-frame zero-g acceleration.
+     * @return Gravity-removed acceleration in the IMU/body frame (g).
+     */
     math3d::Vec3 zeroGAcceleration() const;
 
-    /// @brief ENU-frame zero-g acceleration.
+    /**
+     * @brief ENU-frame zero-g acceleration.
+     * @return Gravity-removed acceleration rotated into the Earth ENU frame (g).
+     */
     math3d::Vec3 globalAcceleration() const;
 
-    /// @brief True after startup ramp completes.
+    /**
+     * @brief True after startup ramp completes.
+     * @return True when filter time exceeds the configured @c t_init_s.
+     */
     bool initialized() const;
 
 private:

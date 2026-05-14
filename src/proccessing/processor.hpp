@@ -77,13 +77,27 @@ public:
 private:
     ProcessorConfig cfg_{};
 
+    /**
+     * @brief Orient raw IMU samples using the Madgwick AHRS filter.
+     * @param samples  Time-sorted decoded IMU ensembles.
+     * @return World-frame oriented samples, one per accepted filter update.
+     */
     std::vector<OrientedSample> orient_from_imu(
         const std::vector<sf::protocol::DecodedImu>& samples);
 
+    /**
+     * @brief Orient DMP quaternion IMU samples directly into world frame.
+     * @param samples  Time-sorted decoded quaternion IMU ensembles.
+     * @return World-frame oriented samples, one per input ensemble.
+     */
     std::vector<OrientedSample> orient_from_quat_imu(
         const std::vector<sf::protocol::DecodedQuatImu>& samples);
 
-    /// @brief Apply filtfilt with @p coeffs to each axis of accel_global.
+    /**
+     * @brief Apply filtfilt with @p coeffs to each axis of accel_global.
+     * @param ride    Oriented ride whose samples are filtered in place.
+     * @param coeffs  Butterworth coefficients for the filter pass.
+     */
     void filter(OrientedRide &ride, const sf::filter::ButterworthCoeffs &coeffs);
 };
 

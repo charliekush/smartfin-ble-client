@@ -36,16 +36,31 @@ static constexpr size_t TEXT_NCHARS_SIZE =
 static constexpr size_t TEXT_MAX_CHARS =
     32; ///< ENS_TEXT (0x0F): firmware-enforced max string length
 
+/**
+ * @brief Read an unsigned 16-bit little-endian integer from a byte pointer.
+ * @param p  Pointer to the first (least significant) byte.
+ * @return   Decoded uint16_t value.
+ */
 static inline uint16_t read_u16_le(const uint8_t *p)
 {
     return static_cast<uint16_t>(p[0]) | (static_cast<uint16_t>(p[1]) << 8);
 }
 
+/**
+ * @brief Read a signed 16-bit little-endian integer from a byte pointer.
+ * @param p  Pointer to the first (least significant) byte.
+ * @return   Decoded int16_t value.
+ */
 static inline int16_t read_i16_le(const uint8_t *p)
 {
     return static_cast<int16_t>(read_u16_le(p));
 }
 
+/**
+ * @brief Read an unsigned 32-bit little-endian integer from a byte pointer.
+ * @param p  Pointer to the first (least significant) byte.
+ * @return   Decoded uint32_t value.
+ */
 static inline uint32_t read_u32_le(const uint8_t *p)
 {
     return static_cast<uint32_t>(p[0]) | (static_cast<uint32_t>(p[1]) << 8) |
@@ -53,6 +68,11 @@ static inline uint32_t read_u32_le(const uint8_t *p)
            (static_cast<uint32_t>(p[3]) << 24);
 }
 
+/**
+ * @brief Read a signed 32-bit little-endian integer from a byte pointer.
+ * @param p  Pointer to the first (least significant) byte.
+ * @return   Decoded int32_t value.
+ */
 static inline int32_t read_i32_le(const uint8_t *p)
 {
     return static_cast<int32_t>(read_u32_le(p));

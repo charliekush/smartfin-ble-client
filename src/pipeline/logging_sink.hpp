@@ -79,12 +79,19 @@ class LoggingSink final : public ISampleSink
         std::fflush(stdout);
     }
 
-    /// @brief Number of temperature ensembles received since construction
+    /**
+     * @brief Number of temperature ensembles received since construction.
+     * @return Running count of temperature ensembles.
+     */
     uint32_t temp_count() const
     {
         return temp_count_.load();
     }
-    /// @brief Number of IMU ensembles received since construction
+
+    /**
+     * @brief Number of IMU ensembles received since construction.
+     * @return Running count of IMU ensembles.
+     */
     uint32_t imu_count() const
     {
         return imu_count_.load();

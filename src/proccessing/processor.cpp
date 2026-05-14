@@ -40,7 +40,7 @@ ProcessedRide Processor::process(sf::pipeline::RideData &data)
     filter(result.ride, lp);
 
     // welch(result.ride);
-        return result;
+    return result;
 }
 
 void Processor::filter(OrientedRide &ride,
