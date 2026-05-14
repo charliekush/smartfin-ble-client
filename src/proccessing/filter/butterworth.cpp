@@ -34,14 +34,14 @@ SosCoeffs butterworth(int order, double cutoff_hz, double sample_rate_hz,
         poles[k] *= warped;
     }
 
-    // Bilinear transform: s → z = (4 + s) / (4 − s).
+    // Bilinear transform: s -> z = (4 + s) / (4 - s).
     for (auto &p : poles)
         p = (4.0 + p) / (4.0 - p);
 
-    // All zeros land at z = −1 (lowpass) or z = +1 (highpass).
+    // All zeros land at z = -1 (lowpass) or z = +1 (highpass).
     const double zero_val = (type == FilterType::Highpass) ? 1.0 : -1.0;
 
-    const int num_sections = (order + 1) / 2; // ⌈order/2⌉
+    const int num_sections = (order + 1) / 2; // ceil(order/2)
     SosCoeffs sos(num_sections);
 
     for (int i = 0; i < num_sections; ++i)
@@ -52,7 +52,7 @@ SosCoeffs butterworth(int order, double cutoff_hz, double sample_rate_hz,
         double a1, a2, b1, b2;
         if (is_first_order)
         {
-            // poles[order/2] is the lone real pole (m = 0 → purely real after
+            // poles[order/2] is the lone real pole (m = 0 -> purely real after
             // bilinear).
             a1 = -poles[order / 2].real();
             a2 = 0.0;

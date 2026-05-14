@@ -26,9 +26,9 @@ namespace sf::pipeline
  *
  * @par Output format
  * @code
- *   [TEMP  #    1]  t=   0.0 s  temp= 21.35 °C  in_water=0
+ *   [TEMP  #    1]  t=   0.0 s  temp= 21.35 deg C  in_water=0
  *   [IMU   #    1]  t=   0.0 s  ax= -0.012  ay=  0.005  az=  9.807 m/s^2
- *                               gx=  0.10   gy= -0.05   gz=  0.02  °/s
+ *                               gx=  0.10   gy= -0.05   gz=  0.02  deg/s
  *                               mx= 20.1    my=-14.3    mz= 42.7   uT
  * @endcode
  */

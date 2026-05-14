@@ -261,7 +261,7 @@ math3d::Vec3 AHRS::computeMagError(math3d::Quaternion q_hat,
 void AHRS::integrateQuaternion(math3d::Quaternion q_hat,
                                math3d::Vec3 corrected_rate_rad_s, Scalar dt_s)
 {
-    // q_dot = 0.5 * q_hat ⊗ [0, w']  (Eq. 7.2)
+    // q_dot = 0.5 * q_hat otimes [0, w']  (Eq. 7.2)
     const math3d::Quaternion q_dot =
         0.5 * (q_hat * math3d::Quaternion::pure(corrected_rate_rad_s));
 

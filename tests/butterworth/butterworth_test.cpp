@@ -4,7 +4,7 @@
  * @brief Property-based tests for the Butterworth filter design.
  * @date 2026-05-14
  *
- * Verifies analytically defined guarantees of a Butterworth filter: −3 dB at
+ * Verifies analytically defined guarantees of a Butterworth filter: -3 dB at
  * cutoff, unity passband gain, correct zero placement, monotonic magnitude
  * response, and SOS coefficient structure.  No reference implementation is
  * needed because these properties follow directly from the filter
@@ -22,13 +22,13 @@
 namespace {
 
 /**
- * @brief Evaluate the magnitude response |H(e^{jω})| for an SOS cascade.
+ * @brief Evaluate the magnitude response |H(e^{jw})| for an SOS cascade.
  *
- * Multiplies the complex response of each biquad section at e^{jω}.
+ * Multiplies the complex response of each biquad section at e^{jw}.
  *
  * @param sos   Filter in second-order sections form.
- * @param omega Digital frequency in radians/sample ∈ [0, π].
- * @return      |H(e^{jω})|
+ * @param omega Digital frequency in radians/sample in [0, pi].
+ * @return      |H(e^{jw})|
  */
 double sos_mag_response(const sf::filter::SosCoeffs &sos, double omega)
 {
@@ -52,7 +52,7 @@ double sos_mag_response(const sf::filter::SosCoeffs &sos, double omega)
  *
  * @param freq_hz Frequency in Hz.
  * @param fs      Sample rate in Hz.
- * @return        ω = π · freq_hz / (fs / 2)
+ * @return        w = pi * freq_hz / (fs / 2)
  */
 double omega(double freq_hz, double fs)
 {
@@ -64,9 +64,9 @@ using sf::filter::FilterType;
 // Lowpass
 
 /**
- * @brief Lowpass magnitude is 1/√2 (−3 dB) at the cutoff frequency.
+ * @brief Lowpass magnitude is 1/sqrt(2) (-3 dB) at the cutoff frequency.
  *
- * Bilinear pre-warping maps the analog −3 dB point exactly to the specified
+ * Bilinear pre-warping maps the analog -3 dB point exactly to the specified
  * digital cutoff, so this should hold to near floating-point precision for
  * all filter orders.
  */
@@ -81,14 +81,14 @@ TEST(ButterworthLowpass, MinusThreeDbAtCutoff)
     }
 }
 
-/// @brief Lowpass gain is unity at DC (ω = 0).
+/// @brief Lowpass gain is unity at DC (w = 0).
 TEST(ButterworthLowpass, UnityGainAtDC)
 {
     auto c = sf::filter::butterworth(4, 10.0, 100.0, FilterType::Lowpass);
     EXPECT_NEAR(sos_mag_response(c, 0.0), 1.0, 1e-9);
 }
 
-/// @brief Lowpass zeros at z = −1 drive the response to near zero at Nyquist.
+/// @brief Lowpass zeros at z = -1 drive the response to near zero at Nyquist.
 TEST(ButterworthLowpass, NearZeroAtNyquist)
 {
     auto c = sf::filter::butterworth(4, 10.0, 100.0, FilterType::Lowpass);
@@ -121,7 +121,7 @@ TEST(ButterworthLowpass, HigherOrderAttenuatesMoreInStopband)
 // Highpass
 
 /**
- * @brief Highpass magnitude is 1/√2 (−3 dB) at the cutoff frequency.
+ * @brief Highpass magnitude is 1/sqrt(2) (-3 dB) at the cutoff frequency.
  */
 TEST(ButterworthHighpass, MinusThreeDbAtCutoff)
 {
@@ -135,7 +135,7 @@ TEST(ButterworthHighpass, MinusThreeDbAtCutoff)
     }
 }
 
-/// @brief Highpass gain is unity at Nyquist (ω = π).
+/// @brief Highpass gain is unity at Nyquist (w = pi).
 TEST(ButterworthHighpass, UnityGainAtNyquist)
 {
     auto c = sf::filter::butterworth(4, 10.0, 100.0, FilterType::Highpass);
@@ -164,7 +164,7 @@ TEST(ButterworthHighpass, MonotonicPassband)
 
 // SOS coefficient structure
 
-/// @brief Number of sections equals ⌈order/2⌉.
+/// @brief Number of sections equals ceil(order/2).
 TEST(ButterworthSos, NumSectionsIsCeilOrderOverTwo)
 {
     for (int order : {1, 2, 3, 4, 5, 6})
