@@ -9,6 +9,7 @@
 
 #include "proccessing/proc_types.hpp"
 #include "proccessing/AHRS/ahrs_types.hpp"
+#include "filter/butterworth.hpp"
 #include "pipeline/file_sink.hpp"
 
 #include <vector>
@@ -81,6 +82,9 @@ private:
 
     std::vector<OrientedSample> orient_from_quat_imu(
         const std::vector<sf::protocol::DecodedQuatImu>& samples);
+
+    /// @brief Apply filtfilt with @p coeffs to each axis of accel_global.
+    void filter(OrientedRide &ride, const sf::filter::ButterworthCoeffs &coeffs);
 };
 
 } // namespace sf::proc
