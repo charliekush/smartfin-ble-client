@@ -134,22 +134,22 @@ if(SMARTFIN_ENABLE_SIMPLEBLE)
     )
 endif()
 
-#  Receiver executable 
-add_executable(ble_receiver
-    src/receiver/receiver.cpp
-)
-target_include_directories(ble_receiver PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${SMARTFIN_PROTOCOL_DIR}
-    ${SMARTFIN_MATH_DIR}
-)
-target_link_libraries(ble_receiver PRIVATE
-    smartfin_math
-    smartfin_protocol
-    smartfin_session
-)
+#  Receiver executable (SimpleBLE desktop only)
 if(SMARTFIN_ENABLE_SIMPLEBLE)
-    target_link_libraries(ble_receiver PRIVATE smartfin_transport)
+    add_executable(ble_receiver
+        src/receiver/receiver.cpp
+    )
+    target_include_directories(ble_receiver PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${SMARTFIN_PROTOCOL_DIR}
+        ${SMARTFIN_MATH_DIR}
+    )
+    target_link_libraries(ble_receiver PRIVATE
+        smartfin_math
+        smartfin_protocol
+        smartfin_session
+        smartfin_transport
+    )
 endif()
 
 #  BLE logger (interactive test tool) 
@@ -183,6 +183,26 @@ if(SMARTFIN_ENABLE_SIMPLEBLE)
         smartfin_session
         smartfin_transport
     )
+endif()
+
+#  C bridge (Swift/watchOS entry point — no BLE dependency)
+# Swift imports src/bridge/smartfin_c_api.h via a bridging header and calls
+# into this library directly; CoreBluetooth handles the BLE layer instead.
+option(SMARTFIN_ENABLE_BRIDGE "Build the pure-C Swift bridge library" OFF)
+if(SMARTFIN_ENABLE_BRIDGE)
+    add_library(smartfin_bridge STATIC
+        src/bridge/smartfin_c_api.cpp
+    )
+    target_include_directories(smartfin_bridge PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${SMARTFIN_PROCESSING_DIR}
+    )
+    target_link_libraries(smartfin_bridge PUBLIC
+        smartfin_protocol
+        smartfin_pipeline
+        smartfin_proc
+    )
+    target_compile_features(smartfin_bridge PUBLIC cxx_std_20)
 endif()
 
 enable_testing()
