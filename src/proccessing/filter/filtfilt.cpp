@@ -350,4 +350,29 @@ std::vector<double> filtfilt(const ButterworthCoeffs &original_coeffs,
     return y_opt;
 }
 
+/**
+ * @brief Apply a zero-phase IIR filter to a signal via SOS cascade.
+ *
+ * Converts each @c Sos section to a @c ButterworthCoeffs and passes it
+ * through the Gust filtfilt, so numerical precision is maintained per
+ * 2nd-order section rather than across the full-order polynomial.
+ *
+ * @param sos     Filter in second-order sections form.
+ * @param signal  Input signal samples.
+ * @return        Filtered signal, same length as input.
+ */
+std::vector<double> filtfilt(const SosCoeffs &sos,
+                             const std::vector<double> &signal)
+{
+    std::vector<double> y = signal;
+    for (const auto &s : sos)
+    {
+        ButterworthCoeffs sec;
+        sec.b = {s.b[0], s.b[1], s.b[2]};
+        sec.a = {s.a[0], s.a[1], s.a[2]};
+        y = filtfilt(sec, y);
+    }
+    return y;
+}
+
 } // namespace sf::filter

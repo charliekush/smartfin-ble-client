@@ -14,11 +14,12 @@
 
 #include <gtest/gtest.h>
 
-#include <complex>
 #include <cmath>
+#include <complex>
 #include <numbers>
 
-namespace {
+namespace
+{
 
 /**
  * @brief Evaluate the magnitude response |H(e^{jω})| at a digital frequency.
@@ -65,9 +66,12 @@ using sf::filter::FilterType;
  */
 TEST(ButterworthLowpass, MinusThreeDbAtCutoff)
 {
-    for (int order : {1, 2, 4, 6}) {
-        auto c = sf::filter::butterworth(order, 10.0, 100.0, FilterType::Lowpass);
-        EXPECT_NEAR(mag_response(c, omega(10.0, 100.0)), 1.0 / std::sqrt(2.0), 1e-6)
+    for (int order : {1, 2, 4, 6})
+    {
+        auto c =
+            sf::filter::butterworth(order, 10.0, 100.0, FilterType::Lowpass);
+        EXPECT_NEAR(mag_response(c, omega(10.0, 100.0)), 1.0 / std::sqrt(2.0),
+                    1e-6)
             << "order=" << order;
     }
 }
@@ -86,19 +90,22 @@ TEST(ButterworthLowpass, NearZeroAtNyquist)
     EXPECT_LT(mag_response(c, std::numbers::pi), 1e-6);
 }
 
-/// @brief Lowpass magnitude decreases monotonically past the cutoff (maximally flat).
+/// @brief Lowpass magnitude decreases monotonically past the cutoff (maximally
+/// flat).
 TEST(ButterworthLowpass, MonotonicRolloff)
 {
     auto c = sf::filter::butterworth(4, 10.0, 100.0, FilterType::Lowpass);
     double prev = mag_response(c, omega(10.0, 100.0));
-    for (double f : {15.0, 20.0, 30.0, 40.0}) {
+    for (double f : {15.0, 20.0, 30.0, 40.0})
+    {
         double cur = mag_response(c, omega(f, 100.0));
         EXPECT_LT(cur, prev) << "not monotone at f=" << f << " Hz";
         prev = cur;
     }
 }
 
-/// @brief Higher filter order gives greater stopband attenuation at the same cutoff.
+/// @brief Higher filter order gives greater stopband attenuation at the same
+/// cutoff.
 TEST(ButterworthLowpass, HigherOrderAttenuatesMoreInStopband)
 {
     /// At 2× the cutoff, order 4 should reject more than order 2.
@@ -116,9 +123,12 @@ TEST(ButterworthLowpass, HigherOrderAttenuatesMoreInStopband)
  */
 TEST(ButterworthHighpass, MinusThreeDbAtCutoff)
 {
-    for (int order : {1, 2, 4, 6}) {
-        auto c = sf::filter::butterworth(order, 10.0, 100.0, FilterType::Highpass);
-        EXPECT_NEAR(mag_response(c, omega(10.0, 100.0)), 1.0 / std::sqrt(2.0), 1e-6)
+    for (int order : {1, 2, 4, 6})
+    {
+        auto c =
+            sf::filter::butterworth(order, 10.0, 100.0, FilterType::Highpass);
+        EXPECT_NEAR(mag_response(c, omega(10.0, 100.0)), 1.0 / std::sqrt(2.0),
+                    1e-6)
             << "order=" << order;
     }
 }
@@ -142,7 +152,8 @@ TEST(ButterworthHighpass, MonotonicPassband)
 {
     auto c = sf::filter::butterworth(4, 10.0, 100.0, FilterType::Highpass);
     double prev = mag_response(c, omega(10.0, 100.0));
-    for (double f : {15.0, 20.0, 30.0, 40.0}) {
+    for (double f : {15.0, 20.0, 30.0, 40.0})
+    {
         double cur = mag_response(c, omega(f, 100.0));
         EXPECT_GT(cur, prev) << "not monotone increasing at f=" << f << " Hz";
         prev = cur;
@@ -154,8 +165,10 @@ TEST(ButterworthHighpass, MonotonicPassband)
 /// @brief b and a vectors each have length order + 1.
 TEST(ButterworthCoeffs, LengthIsOrderPlusOne)
 {
-    for (int order : {1, 2, 4, 6}) {
-        auto c = sf::filter::butterworth(order, 10.0, 100.0, FilterType::Lowpass);
+    for (int order : {1, 2, 4, 6})
+    {
+        auto c =
+            sf::filter::butterworth(order, 10.0, 100.0, FilterType::Lowpass);
         EXPECT_EQ(c.b.size(), size_t(order + 1)) << "order=" << order;
         EXPECT_EQ(c.a.size(), size_t(order + 1)) << "order=" << order;
     }
@@ -164,7 +177,8 @@ TEST(ButterworthCoeffs, LengthIsOrderPlusOne)
 /// @brief a[0] is normalized to 1.0 for both filter types.
 TEST(ButterworthCoeffs, LeadingDenominatorIsOne)
 {
-    for (auto type : {FilterType::Lowpass, FilterType::Highpass}) {
+    for (auto type : {FilterType::Lowpass, FilterType::Highpass})
+    {
         auto c = sf::filter::butterworth(4, 10.0, 100.0, type);
         EXPECT_NEAR(c.a[0], 1.0, 1e-12);
     }
