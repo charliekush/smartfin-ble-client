@@ -112,17 +112,23 @@ void sf_sink_destroy(SF_Sink* sink);
 int sf_sink_push_packet(SF_Sink* sink, const uint8_t* data, size_t len);
 
 /**
- * @brief Return the number of raw IMU samples buffered. Returns 0 if @p sink is @c NULL.
+ * @brief Return the number of raw IMU samples buffered.
+ * @param sink  Sink to query.
+ * @return Number of raw IMU samples buffered, or 0 if @p sink is @c NULL.
  */
 size_t sf_sink_imu_count(const SF_Sink* sink);
 
 /**
- * @brief Return the number of quaternion IMU samples buffered. Returns 0 if @p sink is @c NULL.
+ * @brief Return the number of quaternion IMU samples buffered.
+ * @param sink  Sink to query.
+ * @return Number of quaternion IMU samples buffered, or 0 if @p sink is @c NULL.
  */
 size_t sf_sink_quat_imu_count(const SF_Sink* sink);
 
 /**
- * @brief Return the number of temperature samples buffered. Returns 0 if @p sink is @c NULL.
+ * @brief Return the number of temperature samples buffered.
+ * @param sink  Sink to query.
+ * @return Number of temperature samples buffered, or 0 if @p sink is @c NULL.
  */
 size_t sf_sink_temp_count(const SF_Sink* sink);
 

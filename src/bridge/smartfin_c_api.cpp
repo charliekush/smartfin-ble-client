@@ -24,7 +24,12 @@
 namespace
 {
 
-// BufferSink drops DecodedQuatImu; the bridge needs it for Processor::process.
+/**
+ * @brief ISampleSink that buffers all three ensemble types for the C bridge.
+ *
+ * BufferSink only stores IMU and temperature; this variant also captures
+ * DecodedQuatImu, which Processor::process requires.
+ */
 struct BridgeSink final : sf::pipeline::ISampleSink
 {
     std::vector<sf::protocol::DecodedImu> imu; ///< Raw IMU samples.
@@ -58,11 +63,17 @@ struct BridgeSink final : sf::pipeline::ISampleSink
 
 } // namespace
 
+/**
+ * @brief Opaque sink implementation backing the @c SF_Sink C handle.
+ */
 struct SF_Sink_
 {
     BridgeSink sink;
 };
 
+/**
+ * @brief Opaque processor implementation backing the @c SF_Proc C handle.
+ */
 struct SF_Proc_
 {
     sf::proc::Processor proc;

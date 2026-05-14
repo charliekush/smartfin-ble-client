@@ -84,6 +84,7 @@ public:
 
     /**
      * @brief Return the firmware version if one was received this session.
+     * @return Optional containing the most recently received firmware version.
      */
     const std::optional<sf::protocol::DecodedFwVersion>& fw_version() const {
         return fw_version_;
