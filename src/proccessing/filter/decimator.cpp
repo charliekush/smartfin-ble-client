@@ -11,7 +11,7 @@ namespace sf::filter
 {
 /**
  * @brief weights for kaiser FIR decimator
- * 
+ *
  * @note generated with the following python script
  * import numpy as np
 
