@@ -12,8 +12,10 @@
 #include "session/session.hpp"
 #include "transport/simpleble_adapter.hpp"
 
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <span>
 
 /**
  * @brief Run post-ride processing after the BLE session completes.

@@ -19,7 +19,9 @@
 #include <mutex>
 #include <span>
 #include <thread>
+#include <type_traits>
 #include <variant>
+#include <vector>
 
 namespace sf::session
 {
