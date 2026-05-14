@@ -54,7 +54,7 @@ double omega(double freq_hz, double fs)
 
 using sf::filter::FilterType;
 
-// ────────── Lowpass ──────────
+// Lowpass
 
 /**
  * @brief Lowpass magnitude is 1/√2 (−3 dB) at the cutoff frequency.
@@ -109,7 +109,7 @@ TEST(ButterworthLowpass, HigherOrderAttenuatesMoreInStopband)
               mag_response(c2, omega(f_stop, fs)));
 }
 
-// ────────── Highpass ──────────
+// Highpass
 
 /**
  * @brief Highpass magnitude is 1/√2 (−3 dB) at the cutoff frequency.
@@ -149,7 +149,7 @@ TEST(ButterworthHighpass, MonotonicPassband)
     }
 }
 
-// ────────── Coefficient structure ──────────
+// Coefficient structure
 
 /// @brief b and a vectors each have length order + 1.
 TEST(ButterworthCoeffs, LengthIsOrderPlusOne)

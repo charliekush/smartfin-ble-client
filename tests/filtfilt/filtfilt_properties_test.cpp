@@ -53,7 +53,7 @@ double omega(double freq_hz, double fs)
 
 using sf::filter::FilterType;
 
-// ────────── Basic contract ──────────
+// Basic contract
 
 /// @brief Output vector length equals input vector length for any signal size.
 TEST(FiltfiltProperties, OutputLengthMatchesInput)
@@ -63,7 +63,7 @@ TEST(FiltfiltProperties, OutputLengthMatchesInput)
         EXPECT_EQ(sf::filter::filtfilt(c, std::vector<double>(n, 1.0)).size(), n);
 }
 
-// ────────── LTI properties ──────────
+// LTI properties
 
 /**
  * @brief filtfilt is linear: filtfilt(α·x1 + β·x2) == α·filtfilt(x1) + β·filtfilt(x2).
@@ -114,7 +114,7 @@ TEST(FiltfiltProperties, ScaleInvariance)
         EXPECT_NEAR(ky[i], k * y[i], 1e-10) << "i=" << i;
 }
 
-// ────────── filtfilt-specific ──────────
+// filtfilt-specific
 
 /**
  * @brief A constant (DC) signal is preserved unchanged by a lowpass filter.

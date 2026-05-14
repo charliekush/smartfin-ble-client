@@ -1,10 +1,8 @@
 /**
  * @file madgwick_ahrs.cpp
  * @author Charlie Kushelevsky (charliekushelevsky@gmail.com)
- * @brief
+ * @brief Madgwick AHRS filter implementation: sample conversion, update loop, and accessors.
  * @date 2026-05-07
- *
- *
  */
 #include "madgwick_ahrs.hpp"
 
