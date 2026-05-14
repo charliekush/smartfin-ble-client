@@ -18,7 +18,7 @@ This separation prevents protocol drift between:
 
 - BLE telemetry packet framing, ensemble decoding, and dequantization
 - ensemble IDs, protocol constants, field scaling, and unit conversion
-- AHRS orientation — Madgwick filter (offline) or on-device DMP quaternion (not yet decided)
+- AHRS orientation with Madgwick filter (offline) or on-device DMP quaternion (not yet decided)
 - world-frame rotation and gravity subtraction
 - Butterworth bandpass [0.05–0.5 Hz] filter coefficient generation
 - `filtfilt` zero-phase forward-backward filtering with Gustafsson IC (matches SciPy)
