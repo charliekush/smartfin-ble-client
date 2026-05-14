@@ -36,6 +36,8 @@ This separation prevents protocol drift between:
 
 ## Architecture
 
+At a high level, platform code owns BLE transport and hands raw packet bytes to the shared C++ backend through the C bridge. The backend decodes packets, runs the processing pipeline, and returns C-compatible result structs.
+
 ```
 ┌─────────────────────────────────────────────────┐
 │              Platform (Swift / desktop)          │
@@ -65,7 +67,7 @@ This separation prevents protocol drift between:
 │          Processing Pipeline  (src/proccessing/) │
 │                                                 │
 │  Madgwick AHRS  →  orient_ride                  │
-│  Butterworth + filtfilt  →  filtered accel      │
+│  Decimator + filtfilt  →  filtered accel        │
 │  Processor::process()  →  ProcessedRide         │
 └──────────────┬──────────────────────────────────┘
                │
@@ -77,21 +79,9 @@ This separation prevents protocol drift between:
 └─────────────────────────────────────────────────┘
 ```
 
-## Layers
+For deeper module boundaries, processing stages, ownership rules, and design rationale, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
-### Protocol (`src/protocol/`)
-
-Converts raw BLE notification bytes into structured data. Owns ensemble framing, header parsing, payload decoding, and field scaling. This is the canonical bytes-to-meaning layer — no consumer should reimplement this logic independently.
-
-### Processing (`src/proccessing/`)
-
-Stateful offline pipeline that transforms decoded samples into processed ride data:
-
-1. **AHRS** — Madgwick filter fuses accelerometer, gyroscope, and magnetometer into an orientation quaternion, correcting gyroscope drift.
-2. **Orient** — rotates raw IMU samples into world frame using the AHRS quaternion output.
-3. **Filter** — FIR decimation followed by Butterworth IIR coefficients + `filtfilt` zero-phase filtering applied to world-frame acceleration axes.
-
-### C Bridge (`src/bridge/`)
+## C Bridge Usage
 
 A thin `extern "C"` wrapper over the C++ pipeline, exposing opaque `SF_Sink` and `SF_Proc` handles. Intended for consumption via a Swift bridging header on watchOS/iOS. Usage:
 
@@ -173,7 +163,7 @@ final class SmartfinProcessor {
 
 `sf_proc_run` returns heap memory owned by the C bridge. Swift callers must release it with `sf_oriented_free` after copying or consuming the returned samples.
 
-### Transport Adapters (`src/transport/`, `src/receiver/`)
+## Transport Adapters (`src/transport/`, `src/receiver/`)
 
 Optional, platform-specific BLE backends. The `SimpleBLE` adapter is for desktop and lab testing only. Apple clients use Swift/CoreBluetooth and never link this layer.
 
@@ -183,7 +173,7 @@ Enable with:
 SMARTFIN_ENABLE_SIMPLEBLE=1
 ```
 
-### Pipeline Sinks (`src/pipeline/`)
+## Pipeline Sinks (`src/pipeline/`)
 
 Output targets for the processing pipeline. `FileSink` writes processed data to `.sfdat` files; `BufferSink` accumulates in memory; `LoggingSink` prints samples.
 

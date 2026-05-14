@@ -21,8 +21,8 @@ This design prevents protocol and processing drift between:
 - dequantization of fixed-point sensor fields
 - AHRS orientation (Madgwick filter or on-device DMP quaternion)
 - world-frame rotation and gravity subtraction
-- Butterworth bandpass filter and zero-phase `filtfilt` processing
-- wave metric pipeline (decimation, Welch PSD, spectral integration, moments)
+- FIR decimation, Butterworth bandpass filter, and zero-phase `filtfilt` processing
+- wave metric pipeline (Welch PSD, spectral integration, moments)
 - pure-C bridge API for Swift interop
 - optional SimpleBLE transport adapter for desktop testing
 - unit tests and CI
@@ -66,9 +66,9 @@ Subtract gravity
 accel_world[z] -= 9.81
     │
     ▼
-[NOT IMPLEMENTED] Decimate 55 Hz → 2 Hz
-FIR lowpass (firwin/remez, cutoff 0.5 Hz, ~63 taps)
-+ drop every 27th sample
+Decimate 55 Hz → 5 Hz                        src/proccessing/filter/decimator
+65-tap FIR lowpass (Kaiser-window firwin, cutoff 1.0 Hz)
++ keep every 11th sample
     │
     ▼
 Butterworth bandpass [0.05–0.5 Hz]            src/proccessing/filter/butterworth
@@ -113,7 +113,7 @@ src/
   pipeline/       ISampleSink interface + FileSink, BufferSink, LoggingSink
   proccessing/
     AHRS/         Madgwick filter implementation
-    filter/       Butterworth coefficient generation + filtfilt
+    filter/       Decimator, Butterworth coefficient generation, filtfilt
     math/         Matrix and linear algebra primitives
     sort/         Timsort for timestamp ordering
     processor.hpp/.cpp   Pipeline orchestration (orient → filter → …)
@@ -156,9 +156,9 @@ Stateful offline pipeline that transforms decoded samples into processed ride ou
 
 - **AHRS** — Madgwick filter fuses accel, gyro, and mag into an orientation quaternion, correcting gyro drift. Whether the pipeline uses this or the on-device DMP quaternion is not yet decided.
 - **Orient** — rotates raw IMU samples into world frame and subtracts gravity.
-- **Filter** — Butterworth bandpass [0.05–0.5 Hz] applied via `filtfilt` zero-phase forward-backward filtering with Gustafsson initial-condition correction (matches SciPy output).
+- **Filter** — 65-tap FIR decimation from 55 Hz to 5 Hz, then Butterworth bandpass [0.05–0.5 Hz] applied via `filtfilt` zero-phase forward-backward filtering with Gustafsson initial-condition correction (matches SciPy output).
 
-**Planned stages:** decimation (55 Hz → 2 Hz), Welch PSD, frequency-domain integration to displacement, spectral moments, and wave metrics (Hs, Tp, Tm01, Tm02).
+**Planned stages:** Welch PSD, frequency-domain integration to displacement, spectral moments, and wave metrics (Hs, Tp, Tm01, Tm02).
 
 Supporting modules:
 
