@@ -203,7 +203,7 @@ CI runs on every push via GitHub Actions.
 ## Related Repositories
 
 - [`smartfin-fw3`](https://github.com/UCSD-E4E/smartfin-fw3) — firmware, embedded BLE stack, telemetry byte generation
-- [`smartfin-watch`](https://github.com/charliekush/smartfin-watch) — Apple Watch app, CoreBluetooth, UI, app lifecycle
+- [`smartfin-watch`]() — Apple Watch app, CoreBluetooth, UI, app lifecycle
 
 ## Design Principles
 
