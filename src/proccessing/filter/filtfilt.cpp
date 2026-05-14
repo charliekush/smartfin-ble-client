@@ -326,7 +326,7 @@ std::vector<double> filtfilt(const ButterworthCoeffs &original_coeffs,
             W(obsr_s_row + row, filter_order + col) = obs_reversed(row, col);
         }
 
-    // wic = ic_opt · W^T  (shape: nrows)
+    // wic = ic_opt * W^T  (shape: nrows)
     std::vector<double> wic(nrows, 0.0);
     for (size_t k = 0; k < nrows; ++k)
         for (size_t j = 0; j < two_order; ++j)

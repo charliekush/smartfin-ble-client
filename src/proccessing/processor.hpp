@@ -96,9 +96,9 @@ private:
     /**
      * @brief Apply filtfilt with @p coeffs to each axis of accel_global.
      * @param ride    Oriented ride whose samples are filtered in place.
-     * @param coeffs  Butterworth coefficients for the filter pass.
+     * @param coeffs  Butterworth SOS coefficients for the filter pass.
      */
-    void filter(OrientedRide &ride, const sf::filter::ButterworthCoeffs &coeffs);
+    void filter(OrientedRide &ride, const sf::filter::SosCoeffs &coeffs);
 };
 
 } // namespace sf::proc

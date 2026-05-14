@@ -77,7 +77,7 @@ struct Sample {
     /**
      * @brief Construct an AHRS sample by converting a decoded IMU ensemble.
      *
-     * Converts gyro from deg/s to rad/s, accel from m/s² to g, and preserves
+     * Converts gyro from deg/s to rad/s, accel from m/s^2 to g, and preserves
      * mag in uT.
      *
      * @param imu  Decoded IMU ensemble from the wire protocol.

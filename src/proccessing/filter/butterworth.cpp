@@ -64,9 +64,9 @@ SosCoeffs butterworth(int order, double cutoff_hz, double sample_rate_hz,
             // Conjugate pair: poles[i] and poles[order-1-i].
             const auto p = poles[i];
             a1 = -2.0 * p.real();
-            a2 = std::norm(p); // |p|² = Re²+Im²
+            a2 = std::norm(p); // |p|^2 = Re^2+Im^2
             b1 = -2.0 * zero_val;
-            b2 = 1.0; // zero_val² = 1 for ±1
+            b2 = 1.0; // zero_val^2 = 1 for +/-1
         }
 
         sos[i] = {{{1.0, b1, b2}}, {{1.0, a1, a2}}};

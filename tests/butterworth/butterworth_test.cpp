@@ -6,39 +6,45 @@
  *
  * Verifies analytically defined guarantees of a Butterworth filter: −3 dB at
  * cutoff, unity passband gain, correct zero placement, monotonic magnitude
- * response, and coefficient structure.  No reference implementation is needed
- * because these properties follow directly from the filter specification.
+ * response, and SOS coefficient structure.  No reference implementation is
+ * needed because these properties follow directly from the filter
+ * specification.
  */
 
 #include "filter/butterworth.hpp"
 
 #include <gtest/gtest.h>
 
-#include <cmath>
 #include <complex>
+#include <cmath>
 #include <numbers>
 
-namespace
-{
+namespace {
 
 /**
- * @brief Evaluate the magnitude response |H(e^{jω})| at a digital frequency.
+ * @brief Evaluate the magnitude response |H(e^{jω})| for an SOS cascade.
  *
- * Computes the DTFT of b and a at the given frequency and returns the
- * magnitude of their ratio.
+ * Multiplies the complex response of each biquad section at e^{jω}.
  *
- * @param c     Filter coefficients (b numerator, a denominator).
+ * @param sos   Filter in second-order sections form.
  * @param omega Digital frequency in radians/sample ∈ [0, π].
  * @return      |H(e^{jω})|
  */
-double mag_response(const sf::filter::ButterworthCoeffs &c, double omega)
+double sos_mag_response(const sf::filter::SosCoeffs &sos, double omega)
 {
-    std::complex<double> num = 0.0, den = 0.0;
-    for (size_t k = 0; k < c.b.size(); ++k)
-        num += c.b[k] * std::exp(std::complex<double>(0.0, -omega * double(k)));
-    for (size_t k = 0; k < c.a.size(); ++k)
-        den += c.a[k] * std::exp(std::complex<double>(0.0, -omega * double(k)));
-    return std::abs(num / den);
+    std::complex<double> h = 1.0;
+    const std::complex<double> ejw =
+        std::exp(std::complex<double>(0.0, -omega));
+    const std::complex<double> ej2w = ejw * ejw;
+    for (const auto &s : sos)
+    {
+        const std::complex<double> num =
+            s.b[0] + s.b[1] * ejw + s.b[2] * ej2w;
+        const std::complex<double> den =
+            s.a[0] + s.a[1] * ejw + s.a[2] * ej2w;
+        h *= num / den;
+    }
+    return std::abs(h);
 }
 
 /**
@@ -68,10 +74,9 @@ TEST(ButterworthLowpass, MinusThreeDbAtCutoff)
 {
     for (int order : {1, 2, 4, 6})
     {
-        auto c =
-            sf::filter::butterworth(order, 10.0, 100.0, FilterType::Lowpass);
-        EXPECT_NEAR(mag_response(c, omega(10.0, 100.0)), 1.0 / std::sqrt(2.0),
-                    1e-6)
+        auto c = sf::filter::butterworth(order, 10.0, 100.0, FilterType::Lowpass);
+        EXPECT_NEAR(sos_mag_response(c, omega(10.0, 100.0)),
+                    1.0 / std::sqrt(2.0), 1e-6)
             << "order=" << order;
     }
 }
@@ -80,40 +85,37 @@ TEST(ButterworthLowpass, MinusThreeDbAtCutoff)
 TEST(ButterworthLowpass, UnityGainAtDC)
 {
     auto c = sf::filter::butterworth(4, 10.0, 100.0, FilterType::Lowpass);
-    EXPECT_NEAR(mag_response(c, 0.0), 1.0, 1e-9);
+    EXPECT_NEAR(sos_mag_response(c, 0.0), 1.0, 1e-9);
 }
 
 /// @brief Lowpass zeros at z = −1 drive the response to near zero at Nyquist.
 TEST(ButterworthLowpass, NearZeroAtNyquist)
 {
     auto c = sf::filter::butterworth(4, 10.0, 100.0, FilterType::Lowpass);
-    EXPECT_LT(mag_response(c, std::numbers::pi), 1e-6);
+    EXPECT_LT(sos_mag_response(c, std::numbers::pi), 1e-6);
 }
 
-/// @brief Lowpass magnitude decreases monotonically past the cutoff (maximally
-/// flat).
+/// @brief Lowpass magnitude decreases monotonically past the cutoff.
 TEST(ButterworthLowpass, MonotonicRolloff)
 {
     auto c = sf::filter::butterworth(4, 10.0, 100.0, FilterType::Lowpass);
-    double prev = mag_response(c, omega(10.0, 100.0));
+    double prev = sos_mag_response(c, omega(10.0, 100.0));
     for (double f : {15.0, 20.0, 30.0, 40.0})
     {
-        double cur = mag_response(c, omega(f, 100.0));
+        double cur = sos_mag_response(c, omega(f, 100.0));
         EXPECT_LT(cur, prev) << "not monotone at f=" << f << " Hz";
         prev = cur;
     }
 }
 
-/// @brief Higher filter order gives greater stopband attenuation at the same
-/// cutoff.
+/// @brief Higher filter order gives greater stopband attenuation at the same cutoff.
 TEST(ButterworthLowpass, HigherOrderAttenuatesMoreInStopband)
 {
-    /// At 2× the cutoff, order 4 should reject more than order 2.
     const double fs = 100.0, fc = 10.0, f_stop = 20.0;
     auto c2 = sf::filter::butterworth(2, fc, fs, FilterType::Lowpass);
     auto c4 = sf::filter::butterworth(4, fc, fs, FilterType::Lowpass);
-    EXPECT_LT(mag_response(c4, omega(f_stop, fs)),
-              mag_response(c2, omega(f_stop, fs)));
+    EXPECT_LT(sos_mag_response(c4, omega(f_stop, fs)),
+              sos_mag_response(c2, omega(f_stop, fs)));
 }
 
 // Highpass
@@ -127,8 +129,8 @@ TEST(ButterworthHighpass, MinusThreeDbAtCutoff)
     {
         auto c =
             sf::filter::butterworth(order, 10.0, 100.0, FilterType::Highpass);
-        EXPECT_NEAR(mag_response(c, omega(10.0, 100.0)), 1.0 / std::sqrt(2.0),
-                    1e-6)
+        EXPECT_NEAR(sos_mag_response(c, omega(10.0, 100.0)),
+                    1.0 / std::sqrt(2.0), 1e-6)
             << "order=" << order;
     }
 }
@@ -137,50 +139,62 @@ TEST(ButterworthHighpass, MinusThreeDbAtCutoff)
 TEST(ButterworthHighpass, UnityGainAtNyquist)
 {
     auto c = sf::filter::butterworth(4, 10.0, 100.0, FilterType::Highpass);
-    EXPECT_NEAR(mag_response(c, std::numbers::pi), 1.0, 1e-9);
+    EXPECT_NEAR(sos_mag_response(c, std::numbers::pi), 1.0, 1e-9);
 }
 
 /// @brief Highpass zeros at z = +1 drive the response to near zero at DC.
 TEST(ButterworthHighpass, NearZeroAtDC)
 {
     auto c = sf::filter::butterworth(4, 10.0, 100.0, FilterType::Highpass);
-    EXPECT_LT(mag_response(c, 0.0), 1e-6);
+    EXPECT_LT(sos_mag_response(c, 0.0), 1e-6);
 }
 
 /// @brief Highpass magnitude increases monotonically above the cutoff.
 TEST(ButterworthHighpass, MonotonicPassband)
 {
     auto c = sf::filter::butterworth(4, 10.0, 100.0, FilterType::Highpass);
-    double prev = mag_response(c, omega(10.0, 100.0));
+    double prev = sos_mag_response(c, omega(10.0, 100.0));
     for (double f : {15.0, 20.0, 30.0, 40.0})
     {
-        double cur = mag_response(c, omega(f, 100.0));
+        double cur = sos_mag_response(c, omega(f, 100.0));
         EXPECT_GT(cur, prev) << "not monotone increasing at f=" << f << " Hz";
         prev = cur;
     }
 }
 
-// Coefficient structure
+// SOS coefficient structure
 
-/// @brief b and a vectors each have length order + 1.
-TEST(ButterworthCoeffs, LengthIsOrderPlusOne)
+/// @brief Number of sections equals ⌈order/2⌉.
+TEST(ButterworthSos, NumSectionsIsCeilOrderOverTwo)
 {
-    for (int order : {1, 2, 4, 6})
+    for (int order : {1, 2, 3, 4, 5, 6})
     {
         auto c =
             sf::filter::butterworth(order, 10.0, 100.0, FilterType::Lowpass);
-        EXPECT_EQ(c.b.size(), size_t(order + 1)) << "order=" << order;
-        EXPECT_EQ(c.a.size(), size_t(order + 1)) << "order=" << order;
+        EXPECT_EQ(static_cast<int>(c.size()), (order + 1) / 2)
+            << "order=" << order;
     }
 }
 
-/// @brief a[0] is normalized to 1.0 for both filter types.
-TEST(ButterworthCoeffs, LeadingDenominatorIsOne)
+/// @brief Each section's leading denominator coefficient a[0] is 1.
+TEST(ButterworthSos, AllSectionsLeadingDenominatorIsOne)
 {
     for (auto type : {FilterType::Lowpass, FilterType::Highpass})
     {
         auto c = sf::filter::butterworth(4, 10.0, 100.0, type);
-        EXPECT_NEAR(c.a[0], 1.0, 1e-12);
+        for (size_t i = 0; i < c.size(); ++i)
+            EXPECT_NEAR(c[i].a[0], 1.0, 1e-12) << "section=" << i;
+    }
+}
+
+/// @brief Each section's leading numerator coefficient b[0] is positive.
+TEST(ButterworthSos, LeadingNumeratorPositive)
+{
+    for (auto type : {FilterType::Lowpass, FilterType::Highpass})
+    {
+        auto c = sf::filter::butterworth(4, 10.0, 100.0, type);
+        for (size_t i = 0; i < c.size(); ++i)
+            EXPECT_GT(c[i].b[0], 0.0) << "section=" << i;
     }
 }
 

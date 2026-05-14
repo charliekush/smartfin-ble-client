@@ -38,9 +38,8 @@ struct ButterworthCoeffs
  *
  * The transfer function for this section is:
  * @code
- *   H(z) = (b[0] + b[1]·z⁻¹ + b[2]·z⁻²)
- *          ────────────────────────────────
- *          (a[0] + a[1]·z⁻¹ + a[2]·z⁻²)
+ *   H(z) = (b[0] + b[1]*z^-1 + b[2]*z^-2)
+ *        / (a[0] + a[1]*z^-1 + a[2]*z^-2)
  * @endcode
  * where a[0] is always 1.
  */
@@ -53,7 +52,7 @@ struct Sos
 /**
  * @brief Butterworth filter represented as a cascade of biquad sections.
  *
- * An Nth-order filter produces ⌈N/2⌉ sections.  Odd-order designs carry
+ * An Nth-order filter produces ceil(N/2) sections.  Odd-order designs carry
  * one first-order section stored as a biquad with b[2] = a[2] = 0.
  */
 using SosCoeffs = std::vector<Sos>;
@@ -66,11 +65,11 @@ using SosCoeffs = std::vector<Sos>;
  * The overall passband gain is normalized to unity by scaling the first
  * section.
  *
- * @param order          Filter order (≥ 1).
+ * @param order          Filter order (>= 1).
  * @param cutoff_hz      -3 dB cutoff frequency in Hz.
  * @param sample_rate_hz Sample rate of the signal to be filtered in Hz.
  * @param type           Lowpass or Highpass.
- * @return               SosCoeffs with ⌈order/2⌉ biquad sections.
+ * @return               SosCoeffs with ceil(order/2) biquad sections.
  */
 SosCoeffs butterworth(int order, double cutoff_hz,
                       double sample_rate_hz, FilterType type);

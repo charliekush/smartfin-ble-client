@@ -43,8 +43,7 @@ ProcessedRide Processor::process(sf::pipeline::RideData &data)
     return result;
 }
 
-void Processor::filter(OrientedRide &ride,
-                       const sf::filter::ButterworthCoeffs &coeffs)
+void Processor::filter(OrientedRide &ride, const sf::filter::SosCoeffs &coeffs)
 {
     auto &samples = ride.samples;
     const size_t n = samples.size();
