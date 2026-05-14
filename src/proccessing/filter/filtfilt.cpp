@@ -12,7 +12,7 @@
 #include "filter/filtfilt.hpp"
 #include "math/matrix.hpp"
 
-
+#include <algorithm>
 #include <stdexcept>
 
 namespace sf::filter {

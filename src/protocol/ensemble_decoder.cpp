@@ -8,6 +8,7 @@
 
 #include "ensemble_decoder.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <span>

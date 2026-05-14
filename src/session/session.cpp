@@ -10,6 +10,7 @@
 
 #include "protocol/ensemble_decoder.hpp"
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
