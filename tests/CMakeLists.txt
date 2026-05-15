@@ -11,3 +11,4 @@ endif()
 
 add_subdirectory(filtfilt)
 add_subdirectory(butterworth)
+add_subdirectory(welch)
