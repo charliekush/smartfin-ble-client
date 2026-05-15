@@ -105,7 +105,6 @@ add_library(smartfin_proc STATIC
     src/proccessing/orient_ride.cpp
     src/proccessing/welch/fft.cpp
     src/proccessing/welch/welch.cpp
-    src/proccessing/welch/wave_metrics.cpp
 )
 target_include_directories(smartfin_proc PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
