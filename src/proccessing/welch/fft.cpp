@@ -45,14 +45,6 @@ static int bit_reverse(int i)
     return r;
 }
 
-/**
- * @brief In-place Cooley-Tukey radix-2 DIT FFT.
- *
- * Permutes x into bit-reversed order then applies log2(N) stages of
- * butterfly operations using the precomputed kTwiddle table.
- *
- * @param x  Complex signal of length welch_nperseg. Modified in place.
- */
 void fft(std::vector<std::complex<double>> &x)
 {
     for (int i = 0; i < CFG::welch_nperseg; ++i)
@@ -81,17 +73,6 @@ void fft(std::vector<std::complex<double>> &x)
     }
 }
 
-/**
- * @brief Compute the one-sided squared-magnitude DFT of a real signal.
- *
- * Packs the real input into a complex vector, runs the in-place FFT, then
- * writes |X[k]|^2 for k = 0 .. welch_nperseg/2 into mag_sq.  The DC bin
- * (k=0) and Nyquist bin (k=N/2) are unique; all other bins appear twice in
- * the two-sided spectrum, but only the one-sided values are written here.
- *
- * @param signal  Real input of length welch_nperseg.
- * @param mag_sq  Output of length welch_nperseg/2 + 1.  Overwritten.
- */
 void real_dft_mag_sq(const std::vector<double> &signal,
                      std::vector<double> &mag_sq)
 {
