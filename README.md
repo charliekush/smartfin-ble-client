@@ -36,8 +36,8 @@ This separation prevents protocol drift between:
 
 ## Documentation
 
-- [Architecture](ARCHITECTURE.md) — module boundaries, processing stages, transport ownership, and design rationale.
-- [Swift / Xcode Integration](docs/SWIFT_INTEGRATION.md) — C bridge usage, Xcode linking notes, and a minimal Swift example.
+- [Architecture](ARCHITECTURE.md)  -  module boundaries, processing stages, transport ownership, and design rationale.
+- [Swift / Xcode Integration](docs/SWIFT_INTEGRATION.md)  -  C bridge usage, Xcode linking notes, and a minimal Swift example.
 
 ## Building
 
@@ -64,13 +64,13 @@ CI runs on every push via GitHub Actions.
 
 ## Related Repositories
 
-- [`smartfin-fw3`](https://github.com/UCSD-E4E/smartfin-fw3) — firmware, embedded BLE stack, telemetry byte generation
+- [`smartfin-fw3`](https://github.com/UCSD-E4E/smartfin-fw3)  -  firmware, embedded BLE stack, telemetry byte generation
 
 
 ## Design Principles
 
 - share processing logic, not platform assumptions
-- BLE transport stays on the platform (Swift or SimpleBLE) — never in this library
+- BLE transport stays on the platform (Swift or SimpleBLE)  -  never in this library
 - C bridge boundary stays narrow and stable for Swift interop
 - prefer explicit binary layouts over implicit assumptions
 - lock protocol compatibility with golden test vectors

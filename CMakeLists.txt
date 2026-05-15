@@ -187,7 +187,7 @@ if(SMARTFIN_ENABLE_SIMPLEBLE)
     )
 endif()
 
-#  C bridge (Swift/watchOS entry point — no BLE dependency)
+#  C bridge (Swift/watchOS entry point  -  no BLE dependency)
 # Swift imports src/bridge/smartfin_c_api.h via a bridging header and calls
 # into this library directly; CoreBluetooth handles the BLE layer instead.
 option(SMARTFIN_ENABLE_BRIDGE "Build the pure-C Swift bridge library" OFF)

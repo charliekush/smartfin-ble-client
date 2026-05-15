@@ -28,7 +28,7 @@ int main() {
         .control_uuid     = cfg::CONTROL_UUID,
         .scan_timeout_s   = cfg::SCAN_TIMEOUT_S,
         .run_duration_s   = 3600,  // stream for up to 1 hour; Ctrl-C to stop early
-        .target_ensembles = 0,     // no ensemble cap — log everything
+        .target_ensembles = 0,     // no ensemble cap  -  log everything
     };
 
     std::printf("[ble_logger] Scanning for \"%s\"...\n", cfg.device_name.c_str());
@@ -41,7 +41,7 @@ int main() {
     }
 
     const auto& stats = session.stats();
-    std::printf("\n[ble_logger] Done — %llu ensembles (temp=%u  imu=%u)  %.1f Hz\n",
+    std::printf("\n[ble_logger] Done  -  %llu ensembles (temp=%u  imu=%u)  %.1f Hz\n",
                 static_cast<unsigned long long>(stats.ensemble_count),
                 sink.temp_count(),
                 sink.imu_count(),

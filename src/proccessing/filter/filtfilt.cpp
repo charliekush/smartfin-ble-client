@@ -5,7 +5,7 @@
  * @date 2026-05-12
  *
  * @reference SciPy signal.filtfilt (Gustafsson initial conditions):
- *   scipy/signal/_signaltools.py — Jones E, Oliphant E, Peterson P, et al.
+ *   scipy/signal/_signaltools.py  -  Jones E, Oliphant E, Peterson P, et al.
  *   SciPy: Open Source Scientific Tools for Python. http://www.scipy.org/
  */
 
@@ -151,7 +151,7 @@ static std::vector<double> lfilter(const ButterworthCoeffs &coeffs,
 
     // IIR path: direct form II transposed.
     // The reversed flag lets us run the filter backwards without actually
-    // reversing the output array — we just walk the input from the end.
+    // reversing the output array  -  we just walk the input from the end.
     if (delasignal_state.empty())
         delasignal_state.assign(filter_order, 0.0);
 
@@ -285,7 +285,7 @@ std::vector<double> filtfilt(const ButterworthCoeffs &original_coeffs,
     for (size_t i = 0; i < num_samples; ++i)
         delta_y_bf_fb[i] = y_bf[i] - y_fb[i];
 
-    // When irlen < num_samples, only the boundary regions matter — take the
+    // When irlen < num_samples, only the boundary regions matter  -  take the
     // first and last impulse_len samples of the residual.
     std::vector<double> delta;
     if (impulse_len == num_samples)

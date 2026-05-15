@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 
     const auto& stats = session.stats();
     std::printf(
-        "[ride_recorder] Done — %llu ensembles  %.1f Hz  -> %s\n",
+        "[ride_recorder] Done  -  %llu ensembles  %.1f Hz  -> %s\n",
         static_cast<unsigned long long>(stats.ensemble_count),
         stats.avg_rate_hz,
         path.c_str());
