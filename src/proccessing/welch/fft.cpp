@@ -10,6 +10,7 @@
 #include <complex>
 #include <numbers>
 #include <utility>
+#include <vector>
 
 namespace sf::welch
 {
