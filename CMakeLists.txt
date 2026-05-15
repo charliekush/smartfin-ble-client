@@ -14,6 +14,9 @@ set(SMARTFIN_MATH_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/src/proccessing/math)
 
 option(SMARTFIN_ENABLE_SIMPLEBLE "Enable SimpleBLE transport" ON)
 
+set(SMARTFIN_WELCH_NPERSEG "256" CACHE STRING
+    "DFT length for the Welch PSD estimator (must be a power of 2, >= 4)")
+
 if(SMARTFIN_ENABLE_SIMPLEBLE)
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/SimpleBLE/simpleble/CMakeLists.txt")
         message(FATAL_ERROR
@@ -100,6 +103,8 @@ add_library(smartfin_proc STATIC
     src/proccessing/proc_types.cpp
     src/proccessing/processor.cpp
     src/proccessing/orient_ride.cpp
+    src/proccessing/welch/fft.cpp
+    src/proccessing/welch/welch.cpp
 )
 target_include_directories(smartfin_proc PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -109,6 +114,9 @@ target_link_libraries(smartfin_proc PUBLIC
     smartfin_ahrs
     smartfin_filter
     smartfin_pipeline
+)
+target_compile_definitions(smartfin_proc PUBLIC
+    SMARTFIN_WELCH_NPERSEG=${SMARTFIN_WELCH_NPERSEG}
 )
 target_compile_features(smartfin_proc PUBLIC cxx_std_20)
 
@@ -187,7 +195,7 @@ if(SMARTFIN_ENABLE_SIMPLEBLE)
     )
 endif()
 
-#  C bridge (Swift/watchOS entry point  -  no BLE dependency)
+#  C bridge (Swift/watchOS entry point — no BLE dependency)
 # Swift imports src/bridge/smartfin_c_api.h via a bridging header and calls
 # into this library directly; CoreBluetooth handles the BLE layer instead.
 option(SMARTFIN_ENABLE_BRIDGE "Build the pure-C Swift bridge library" OFF)
