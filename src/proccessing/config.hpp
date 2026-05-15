@@ -32,19 +32,24 @@ constexpr Scalar analysis_window_s = 1200.0;
 /**
  * @brief DFT length and samples per Welch segment.
  *
- * At the 5 Hz decimated rate this gives a frequency resolution of
- * 5 / 256 = 0.0195 Hz, which resolves wave periods up to 51 seconds.
- * Must be a positive even integer and satisfy nperseg >= 4.
+ * Override at configure time with -DSMARTFIN_WELCH_NPERSEG=<N>.
+ * Must be a power of 2 and satisfy nperseg >= 4.
+ * Default (256) at a 5 Hz decimated rate gives df = 0.0195 Hz.
  */
-constexpr int welch_nperseg = 256;
+#ifndef SMARTFIN_WELCH_NPERSEG
+#define SMARTFIN_WELCH_NPERSEG 256
+#endif
 
+constexpr int welch_nperseg = SMARTFIN_WELCH_NPERSEG;
+static_assert((welch_nperseg > 0 && (welch_nperseg & (welch_nperseg - 1)) == 0),
+              "welch_nperseg must be a power of 2!");
 /**
  * @brief Overlap between adjacent Welch segments in samples.
  *
- * Set to nperseg / 2 (50% overlap). Satisfies the constant-overlap-add
+ * Fixed at 50% of nperseg. Satisfies the constant-overlap-add
  * condition for the Hann window, giving unbiased variance reduction.
  */
-constexpr int welch_noverlap = 128;
+constexpr int welch_noverlap = welch_nperseg / 2;
 
 } // namespace CFG
 
