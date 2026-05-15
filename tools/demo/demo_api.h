@@ -50,6 +50,9 @@ int sf_demo_nperseg(void);
  * @param out_elapsed_ms  Output timestamps in ms, pre-allocated length n_in.
  * @param out_q           Output quaternions (w,x,y,z), pre-allocated (n_in,4).
  * @param out_accel       Output Earth-frame acceleration in m/s^2, (n_in,3).
+ * @param out_accel_used  Number of output samples that used accel feedback.
+ * @param out_mag_used    Number of output samples that used mag feedback.
+ * @param out_bias_used   Number of output samples that updated gyro bias.
  * @return                Number of output samples written (<= n_in).
  */
 int sf_demo_orient(
@@ -60,7 +63,10 @@ int sf_demo_orient(
     int             n_in,
     uint32_t       *out_elapsed_ms,
     double         *out_q,
-    double         *out_accel
+    double         *out_accel,
+    int            *out_accel_used,
+    int            *out_mag_used,
+    int            *out_bias_used
 );
 
 /**

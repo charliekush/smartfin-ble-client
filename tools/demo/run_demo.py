@@ -18,6 +18,8 @@ Usage:
 """
 
 import argparse
+import atexit
+import builtins
 import ctypes
 import sys
 from pathlib import Path
@@ -43,6 +45,27 @@ THREDDS_ODAP = (
 f32p = np.ctypeslib.ndpointer(dtype=np.float32, flags="C_CONTIGUOUS")
 f64p = np.ctypeslib.ndpointer(dtype=np.float64, flags="C_CONTIGUOUS")
 u32p = np.ctypeslib.ndpointer(dtype=np.uint32,  flags="C_CONTIGUOUS")
+
+
+def tee_prints_to(log_path: Path):
+    """Mirror stdout print calls to a log file."""
+    log_file = log_path.open("w", encoding="utf-8")
+    original_print = builtins.print
+
+    def tee_print(*args, **kwargs):
+        original_print(*args, **kwargs)
+
+        stream = kwargs.get("file")
+        if stream not in (None, sys.stdout):
+            return
+
+        log_kwargs = dict(kwargs)
+        log_kwargs["file"] = log_file
+        original_print(*args, **log_kwargs)
+        log_file.flush()
+
+    builtins.print = tee_print
+    return original_print, log_file
 
 
 def load_lib(path: Path | None) -> ctypes.CDLL:
@@ -72,6 +95,9 @@ def load_lib(path: Path | None) -> ctypes.CDLL:
         u32p, f32p, f32p, f32p,
         ctypes.c_int,
         u32p, f64p, f64p,
+        ctypes.POINTER(ctypes.c_int),
+        ctypes.POINTER(ctypes.c_int),
+        ctypes.POINTER(ctypes.c_int),
     ]
 
     lib.sf_demo_decimate.restype  = ctypes.c_int
@@ -108,7 +134,7 @@ def load_mission(source: int | Path) -> xr.Dataset:
 def best_trajectory(ds: xr.Dataset) -> xr.Dataset:
     eta = ds["sea_surface_elevation"]
     valid = (~np.isnan(eta)).sum(dim="time")
-    return ds.isel(trajectory=int(valid.argmax()))
+    return ds.isel(trajectory=int(np.argmax(valid.values)))
 
 
 def imu_arrays(buoy: xr.Dataset):
@@ -170,6 +196,26 @@ def report_accel(elapsed_ms: np.ndarray, accel: np.ndarray) -> None:
           f"[{az.min():.4f}, {az.max():.4f}]  m/s^2")
 
 
+def report_ahrs_usage(n_oriented: int, accel_used: int,
+                      mag_used: int, bias_used: int) -> None:
+    if n_oriented <= 0:
+        print("  AHRS feedback: no accepted samples")
+        return
+
+    accel_pct = 100.0 * accel_used / n_oriented
+    mag_pct = 100.0 * mag_used / n_oriented
+    bias_pct = 100.0 * bias_used / n_oriented
+    print(f"  AHRS feedback: accel={accel_pct:5.1f}%  "
+          f"mag={mag_pct:5.1f}%  gyro_bias={bias_pct:5.1f}%")
+
+    if mag_pct < 10.0:
+        print("  WARNING: magnetometer feedback rarely used; "
+              "yaw/heading is weakly constrained")
+    if accel_pct < 50.0:
+        print("  WARNING: accelerometer feedback used less than half the time; "
+              "tilt/gravity removal may be unreliable")
+
+
 def _save(fig: plt.Figure, path: Path) -> None:
     fig.savefig(path, dpi=150, bbox_inches="tight")
 
@@ -222,13 +268,13 @@ def plot_pipeline(elapsed_oriented, accel_oriented,
         ax.legend(fontsize=8)
 
     # Individual subplots
-    _save(_subplot_fig(draw_oriented,  f"Oriented — {mission_label}"),
+    _save(_subplot_fig(draw_oriented,  f"Oriented ({mission_label})"),
           out_dir / "pipeline_1_oriented.png")
-    _save(_subplot_fig(draw_decimated, f"Decimated — {mission_label}"),
+    _save(_subplot_fig(draw_decimated, f"Decimated ({mission_label})"),
           out_dir / "pipeline_2_decimated.png")
-    _save(_subplot_fig(draw_filtered,  f"Filtered — {mission_label}"),
+    _save(_subplot_fig(draw_filtered,  f"Filtered ({mission_label})"),
           out_dir / "pipeline_3_filtered.png")
-    _save(_subplot_fig(draw_all,       f"All stages — {mission_label}"),
+    _save(_subplot_fig(draw_all,       f"All stages ({mission_label})"),
           out_dir / "pipeline_4_all.png")
 
     # Combined 2x2
@@ -291,11 +337,11 @@ def plot_frequency(X: np.ndarray, X_pre: np.ndarray,
         ax.set_xlim(0, fs_dec / 2)
         ax.legend(fontsize=8)
 
-    _save(_subplot_fig(draw_fft,    f"FFT magnitude — {mission_label}"),
+    _save(_subplot_fig(draw_fft,    f"FFT magnitude ({mission_label})"),
           out_dir / "freq_1_fft_magnitude.png")
-    _save(_subplot_fig(draw_mag_sq, f"real_dft_mag_sq — {mission_label}"),
+    _save(_subplot_fig(draw_mag_sq, f"real_dft_mag_sq ({mission_label})"),
           out_dir / "freq_2_mag_sq.png")
-    _save(_subplot_fig(draw_xyz,    f"FFT by axis — {mission_label}"),
+    _save(_subplot_fig(draw_xyz,    f"FFT by axis ({mission_label})"),
           out_dir / "freq_3_xyz.png")
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(19, 4))
@@ -324,7 +370,7 @@ def plot_spectrogram(dec_elapsed: np.ndarray, dec_accel: np.ndarray,
         ax.set_title("Spectrogram — decimated accel_z  (dB)")
         ax.legend(fontsize=8, loc="upper right")
 
-    _save(_subplot_fig(draw_specgram, f"Spectrogram — {mission_label}", figsize=(13, 4)),
+    _save(_subplot_fig(draw_specgram, f"Spectrogram ({mission_label})", figsize=(13, 4)),
           out_dir / "spectrogram.png")
 
 
@@ -361,7 +407,7 @@ def plot_reference(dec_elapsed: np.ndarray, filt_accel: np.ndarray,
         ax.legend(lines1 + lines2, labels1 + labels2, fontsize=8)
 
     _save(_subplot_fig(draw_overlay,
-                       f"Reference overlay — {mission_label}", figsize=(13, 4)),
+                       f"Reference overlay ({mission_label})", figsize=(13, 4)),
           out_dir / "reference_overlay.png")
 
 
@@ -380,7 +426,7 @@ def plot_timing(dec_elapsed: np.ndarray, mission_label: str, out_dir: Path) -> N
         ax.legend(fontsize=8)
 
     _save(_subplot_fig(draw_hist,
-                       f"Sample intervals — {mission_label}", figsize=(9, 4)),
+                       f"Sample intervals ({mission_label})", figsize=(9, 4)),
           out_dir / "timing_histogram.png")
 
 
@@ -413,10 +459,10 @@ def plot_ahrs(elapsed_ms: np.ndarray, accel_body_z: np.ndarray,
         ax.legend(fontsize=8)
 
     _save(_subplot_fig(draw_body_vs_earth,
-                       f"AHRS body vs earth — {mission_label}", figsize=(11, 4)),
+                       f"AHRS body vs earth ({mission_label})", figsize=(11, 4)),
           out_dir / "ahrs_1_body_vs_earth.png")
     _save(_subplot_fig(draw_euler,
-                       f"AHRS Euler angles — {mission_label}", figsize=(11, 4)),
+                       f"AHRS Euler angles ({mission_label})", figsize=(11, 4)),
           out_dir / "ahrs_2_euler.png")
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 7))
@@ -439,6 +485,12 @@ def main() -> None:
                         help="print stage reports without showing plots")
     args = parser.parse_args()
 
+    out_dir = Path(__file__).parent / "output" / f"mission_{args.mission}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    original_print, log_file = tee_prints_to(out_dir / "run_demo.log")
+    atexit.register(lambda: (setattr(builtins, "print", original_print),
+                             log_file.close()))
+
     lib     = load_lib(args.lib)
     nperseg = lib.sf_demo_nperseg()
 
@@ -446,11 +498,12 @@ def main() -> None:
     section("Load")
     source = args.local if args.local else args.mission
     mission_label = f"mission {args.mission}" if not args.local else str(args.local.name)
+    print(f"  log file   : {out_dir / 'run_demo.log'}")
     print(f"  source     : {source}")
     ds   = load_mission(source)
     buoy = best_trajectory(ds)
     print(f"  trajectory : {int(buoy['trajectory'].values)}"
-          f"  (of {ds.dims['trajectory']})")
+          f"  (of {ds.sizes['trajectory']})")
     print(f"  imu_freq   : {int(ds['imu_freq'].values[0])} Hz")
     print(f"  nperseg    : {nperseg}  (SMARTFIN_WELCH_NPERSEG)")
 
@@ -463,18 +516,26 @@ def main() -> None:
     out_elapsed = np.zeros(n_in, dtype=np.uint32)
     out_q       = np.zeros((n_in, 4), dtype=np.float64)
     out_accel   = np.zeros((n_in, 3), dtype=np.float64)
+    accel_used  = ctypes.c_int()
+    mag_used    = ctypes.c_int()
+    bias_used   = ctypes.c_int()
 
     n_oriented = lib.sf_demo_orient(
         elapsed_ms, accel, gyro, mag, n_in,
         out_elapsed,
         np.ascontiguousarray(out_q),
         np.ascontiguousarray(out_accel),
+        ctypes.byref(accel_used),
+        ctypes.byref(mag_used),
+        ctypes.byref(bias_used),
     )
 
     elapsed_oriented = out_elapsed[:n_oriented].copy()
     q_oriented       = out_q[:n_oriented].copy()
     accel_oriented   = out_accel[:n_oriented].copy()
     report_accel(elapsed_oriented, accel_oriented)
+    report_ahrs_usage(n_oriented, accel_used.value,
+                      mag_used.value, bias_used.value)
 
     # Stage 2: decimate
     section("Stage 2: decimate")
@@ -561,9 +622,6 @@ def main() -> None:
 
     if args.no_plot:
         return
-
-    out_dir = Path(__file__).parent / "output" / f"mission_{args.mission}"
-    out_dir.mkdir(parents=True, exist_ok=True)
 
     accel_body_z = accel[:, 2].astype(np.float64)
 

@@ -7,17 +7,15 @@
 
 #include "demo_api.h"
 
-#include "proccessing/processor.hpp"
+#include "proccessing/AHRS/madgwick_ahrs.hpp"
 #include "proccessing/config.hpp"
 #include "proccessing/welch/welch.hpp"
 #include "filter/butterworth.hpp"
 #include "filter/decimator.hpp"
 #include "filter/filtfilt.hpp"
-#include "pipeline/file_sink.hpp"
 #include "protocol/ensemble_types.hpp"
 
 #include <complex>
-#include <vector>
 
 extern "C" {
 
@@ -34,42 +32,57 @@ int sf_demo_orient(
     int             n_in,
     uint32_t       *out_elapsed_ms,
     double         *out_q,
-    double         *out_accel)
+    double         *out_accel,
+    int            *out_accel_used,
+    int            *out_mag_used,
+    int            *out_bias_used)
 {
-    std::vector<sf::protocol::DecodedImu> imu(n_in);
+    sf::ahrs::AHRS filter;
+    int n_out = 0;
+    int accel_used = 0;
+    int mag_used = 0;
+    int bias_used = 0;
+
     for (int i = 0; i < n_in; ++i)
     {
-        imu[i].elapsed_time_ms = elapsed_ms[i];
-        imu[i].accel_ms2[0] = accel_ms2[i * 3 + 0];
-        imu[i].accel_ms2[1] = accel_ms2[i * 3 + 1];
-        imu[i].accel_ms2[2] = accel_ms2[i * 3 + 2];
-        imu[i].gyro_dps[0]  = gyro_dps[i * 3 + 0];
-        imu[i].gyro_dps[1]  = gyro_dps[i * 3 + 1];
-        imu[i].gyro_dps[2]  = gyro_dps[i * 3 + 2];
-        imu[i].mag_uT[0]    = mag_uT[i * 3 + 0];
-        imu[i].mag_uT[1]    = mag_uT[i * 3 + 1];
-        imu[i].mag_uT[2]    = mag_uT[i * 3 + 2];
+        sf::protocol::DecodedImu imu;
+        imu.elapsed_time_ms = elapsed_ms[i];
+        imu.accel_ms2[0] = accel_ms2[i * 3 + 0];
+        imu.accel_ms2[1] = accel_ms2[i * 3 + 1];
+        imu.accel_ms2[2] = accel_ms2[i * 3 + 2];
+        imu.gyro_dps[0]  = gyro_dps[i * 3 + 0];
+        imu.gyro_dps[1]  = gyro_dps[i * 3 + 1];
+        imu.gyro_dps[2]  = gyro_dps[i * 3 + 2];
+        imu.mag_uT[0]    = mag_uT[i * 3 + 0];
+        imu.mag_uT[1]    = mag_uT[i * 3 + 1];
+        imu.mag_uT[2]    = mag_uT[i * 3 + 2];
+
+        const auto result = filter.update(imu);
+        if (!result.updated)
+            continue;
+
+        out_elapsed_ms[n_out]  = imu.elapsed_time_ms;
+        out_q[n_out * 4 + 0]  = result.q.w;
+        out_q[n_out * 4 + 1]  = result.q.x;
+        out_q[n_out * 4 + 2]  = result.q.y;
+        out_q[n_out * 4 + 3]  = result.q.z;
+        out_accel[n_out * 3 + 0] = result.accel_global.x;
+        out_accel[n_out * 3 + 1] = result.accel_global.y;
+        out_accel[n_out * 3 + 2] = result.accel_global.z;
+
+        accel_used += result.accel_used ? 1 : 0;
+        mag_used += result.mag_used ? 1 : 0;
+        bias_used += result.gyro_bias_updated ? 1 : 0;
+        ++n_out;
     }
 
-    sf::pipeline::RideData rd;
-    rd.imu = std::move(imu);
+    if (out_accel_used != nullptr)
+        *out_accel_used = accel_used;
+    if (out_mag_used != nullptr)
+        *out_mag_used = mag_used;
+    if (out_bias_used != nullptr)
+        *out_bias_used = bias_used;
 
-    sf::proc::Processor proc;
-    sf::proc::OrientedRide ride = proc.orient_ride(rd);
-
-    const int n_out = static_cast<int>(ride.samples.size());
-    for (int i = 0; i < n_out; ++i)
-    {
-        const auto &s      = ride.samples[i];
-        out_elapsed_ms[i]  = s.elapsed_time_ms;
-        out_q[i * 4 + 0]  = s.q.w;
-        out_q[i * 4 + 1]  = s.q.x;
-        out_q[i * 4 + 2]  = s.q.y;
-        out_q[i * 4 + 3]  = s.q.z;
-        out_accel[i * 3 + 0] = s.accel_global.x;
-        out_accel[i * 3 + 1] = s.accel_global.y;
-        out_accel[i * 3 + 2] = s.accel_global.z;
-    }
     return n_out;
 }
 
