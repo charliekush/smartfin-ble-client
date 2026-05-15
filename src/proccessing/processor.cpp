@@ -37,6 +37,12 @@ ProcessedRide Processor::process(sf::pipeline::RideData &data)
 
 void Processor::filter(OrientedRide &ride)
 {
+    decimate(ride);
+    bandpass(ride);
+}
+
+void Processor::decimate(OrientedRide &ride)
+{
     auto &samples = ride.samples;
     sf::filter::Decimator decim_x;
     sf::filter::Decimator decim_y;
@@ -63,6 +69,11 @@ void Processor::filter(OrientedRide &ride)
     }
 
     samples = std::move(decimated);
+}
+
+void Processor::bandpass(OrientedRide &ride)
+{
+    auto &samples = ride.samples;
     const size_t n = samples.size();
 
     if (n <= 9)

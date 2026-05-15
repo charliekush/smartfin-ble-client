@@ -98,6 +98,27 @@ private:
      * @param ride  Oriented ride whose samples are filtered in place.
      */
     void filter(OrientedRide &ride);
+
+    /**
+     * @brief Downsample ride samples by the configured decimation factor.
+     *
+     * Replaces @c ride.samples with the decimated vector in place.
+     *
+     * @param ride  Oriented ride whose samples are decimated in place.
+     */
+    void decimate(OrientedRide &ride);
+
+    /**
+     * @brief Apply zero-phase high- and low-pass filters to each acceleration axis.
+     *
+     * Estimates sample rate from the elapsed timestamps, builds fourth-order
+     * Butterworth filters at the configured band edges, and runs forward-backward
+     * filtfilt on each axis. Returns early if the ride is too short or has a
+     * non-positive duration.
+     *
+     * @param ride  Oriented ride whose samples are filtered in place.
+     */
+    void bandpass(OrientedRide &ride);
 };
 
 } // namespace sf::proc

@@ -289,3 +289,5 @@ $RECYCLE.BIN/
 
 external/**
 output.txt
+tools/demo/output/**/*
+output/mission_34/ahrs_1_body_vs_earth.png

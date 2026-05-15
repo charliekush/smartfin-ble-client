@@ -17,6 +17,9 @@ option(SMARTFIN_ENABLE_SIMPLEBLE "Enable SimpleBLE transport" ON)
 set(SMARTFIN_WELCH_NPERSEG "256" CACHE STRING
     "DFT length for the Welch PSD estimator (must be a power of 2, >= 4)")
 
+set(SMARTFIN_DEMO_NPERSEG "512" CACHE STRING
+    "DFT length used by smartfin_demo (must be a power of 2, >= 4; default 512)")
+
 if(SMARTFIN_ENABLE_SIMPLEBLE)
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/SimpleBLE/simpleble/CMakeLists.txt")
         message(FATAL_ERROR
@@ -96,29 +99,58 @@ target_include_directories(smartfin_pipeline PUBLIC
 target_link_libraries(smartfin_pipeline PUBLIC smartfin_protocol)
 
 #  Processing layer
-# proc_types: plain data types (OrientedSample, OrientedRide).
-# processor:  pipeline coordinator (sort → orient → merge).
+# smartfin_welch: FFT and Welch PSD, compiled with the production nperseg.
+# smartfin_proc_core: data types and pipeline coordinator (no welch sources).
+# smartfin_proc: INTERFACE bundle of proc_core + welch for all production consumers.
 # sort/timsort.hpp is header-only; no compilation unit required.
-add_library(smartfin_proc STATIC
-    src/proccessing/proc_types.cpp
-    src/proccessing/processor.cpp
-    src/proccessing/orient_ride.cpp
+add_library(smartfin_welch STATIC
     src/proccessing/welch/fft.cpp
     src/proccessing/welch/welch.cpp
 )
-target_include_directories(smartfin_proc PUBLIC
+target_include_directories(smartfin_welch PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${SMARTFIN_PROCESSING_DIR}
 )
-target_link_libraries(smartfin_proc PUBLIC
+target_compile_definitions(smartfin_welch PUBLIC
+    SMARTFIN_WELCH_NPERSEG=${SMARTFIN_WELCH_NPERSEG}
+)
+target_compile_features(smartfin_welch PUBLIC cxx_std_20)
+
+add_library(smartfin_proc_core STATIC
+    src/proccessing/proc_types.cpp
+    src/proccessing/processor.cpp
+    src/proccessing/orient_ride.cpp
+)
+target_include_directories(smartfin_proc_core PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_PROCESSING_DIR}
+)
+target_link_libraries(smartfin_proc_core PUBLIC
     smartfin_ahrs
     smartfin_filter
     smartfin_pipeline
 )
-target_compile_definitions(smartfin_proc PUBLIC
-    SMARTFIN_WELCH_NPERSEG=${SMARTFIN_WELCH_NPERSEG}
+target_compile_features(smartfin_proc_core PUBLIC cxx_std_20)
+
+add_library(smartfin_proc INTERFACE)
+target_link_libraries(smartfin_proc INTERFACE
+    smartfin_proc_core
+    smartfin_welch
 )
-target_compile_features(smartfin_proc PUBLIC cxx_std_20)
+
+# Demo welch: same sources compiled with SMARTFIN_DEMO_NPERSEG (default 1024).
+add_library(smartfin_welch_demo STATIC
+    src/proccessing/welch/fft.cpp
+    src/proccessing/welch/welch.cpp
+)
+target_include_directories(smartfin_welch_demo PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${SMARTFIN_PROCESSING_DIR}
+)
+target_compile_definitions(smartfin_welch_demo PUBLIC
+    SMARTFIN_WELCH_NPERSEG=${SMARTFIN_DEMO_NPERSEG}
+)
+target_compile_features(smartfin_welch_demo PUBLIC cxx_std_20)
 
 #  Session layer
 # Depends on protocol; transport adapter is injected at runtime via IBleAdapter.
@@ -214,6 +246,28 @@ if(SMARTFIN_ENABLE_BRIDGE)
     )
     target_compile_features(smartfin_bridge PUBLIC cxx_std_20)
 endif()
+
+# Processing demo shared library (no BLE dependency)
+# Exposes pipeline stages as a flat C API loaded by tools/demo/run_demo.py
+# via ctypes. Links smartfin_welch_demo so the FFT runs at SMARTFIN_DEMO_NPERSEG
+# (default 1024) independently of the production SMARTFIN_WELCH_NPERSEG (256).
+# Build: cmake --build build --target smartfin_demo
+add_library(smartfin_demo SHARED
+    tools/demo/demo_api.cpp
+)
+target_include_directories(smartfin_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/demo
+)
+target_link_libraries(smartfin_demo PRIVATE
+    smartfin_proc_core
+    smartfin_welch_demo
+    smartfin_pipeline
+)
+target_compile_definitions(smartfin_demo PRIVATE
+    SMARTFIN_WELCH_NPERSEG=${SMARTFIN_DEMO_NPERSEG}
+)
+target_compile_features(smartfin_demo PRIVATE cxx_std_20)
 
 enable_testing()
 add_subdirectory(tests)
